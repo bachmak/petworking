@@ -6,12 +6,24 @@
 
 #### Процедура сборки
 
+Скачать образ с предустановленным окружением:
 ```
-python -m pip install conan
-mkdir build $$ cd build
-conan install ..
+docker pull bachmak/ubuntu_gcc12_clang14
+```
+Создать и запустить в интерактивном режиме контейнер от образа:
+```
+docker run --name petworking -it bachmak/ubuntu_gcc12_clang14
+```
+_внутри контейнера:_
+```
+git clone https://github.com/bachmak/petworking.git
+cd petworking && mkdir .build && cd .build
+```
+Скачать/собрать и подключить зависимости:
+```
+conan install .. --build=missing
+```
+Непосредственно собрать проект:
+```
 conan build ..
 ```
-
-#### Поддерживаемые компиляторы
-gcc-9+, clang-11+
