@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(.)
+project(echo-server)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
