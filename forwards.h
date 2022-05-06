@@ -5,14 +5,22 @@
 #define ESE_FWD(args) std::forward<decltype(args)>(args)...
 
 namespace ese {
-class Logger;
+namespace tcp {
 
-using Context = boost::asio::io_context;
 using Socket = boost::asio::ip::tcp::socket;
 using Acceptor = boost::asio::ip::tcp::acceptor;
 using Endpoint = boost::asio::ip::tcp::endpoint;
-using Resolver = boost::asio::ip::tcp::resolver;
-using ResolveResults = Resolver::results_type;
+}  // namespace tcp
+
+namespace udp {
+
+using Socket = boost::asio::ip::udp::socket;
+using Endpoint = boost::asio::ip::udp::endpoint;
+}  // namespace udp
+
+class Logger;
+
+using Context = boost::asio::io_context;
 using Buffer = boost::asio::streambuf;
 using ErrorCode = boost::system::error_code;
 

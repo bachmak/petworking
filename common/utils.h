@@ -1,6 +1,6 @@
 #pragma once
 
-#include "forwards.h"
+#include "connection_settings.h"
 
 namespace ese {
 inline std::string GetCurrentTime() {
@@ -8,31 +8,23 @@ inline std::string GetCurrentTime() {
   return to_simple_string(second_clock::local_time());
 }
 
-inline auto ReadNameWithPort(int argc, char const* argv[]) {
-  auto host_name = argc > 1 ? argv[1] : "";
-  auto host_port = argc > 2 ? argv[2] : "";
-  return std::make_pair(host_name, host_port);
+inline auto ReadConnectionSettings(int argc, char const* argv[]) {
+  auto protocol = argc > 1 ? argv[1] : "";
+  auto host_name = argc > 2 ? argv[2] : "";
+  auto host_port = argc > 3 ? argv[3] : "";
+  return ConnectionSettings(protocol, host_name, host_port);
 }
 }  // namespace ese
 
 namespace std {
-inline std::ostream& operator<<(std::ostream& os,
-                                const ese::ResolveResults& results) {
-  bool first = true;
-  os << '[';
-  for (const auto& result : results) {
-    os << (!std::exchange(first, false) ? ", " : "")
-       << result.endpoint().address().to_string();
-  }
-  return os << ']';
-}
 
 inline std::ostream& operator<<(std::ostream& os,
-                                const ese::Endpoint& endpoint) {
+                                const ese::tcp::Endpoint& endpoint) {
   return os << endpoint.address().to_string() << ":" << endpoint.port();
 }
 
-inline std::ostream& operator<<(std::ostream& os, const ese::Socket& socket) {
+inline std::ostream& operator<<(std::ostream& os,
+                                const ese::tcp::Socket& socket) {
   return os << "socket from local endpoint " << socket.local_endpoint()
             << " to remote endpoint " << socket.remote_endpoint();
 }

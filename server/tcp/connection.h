@@ -3,6 +3,8 @@
 #include "forwards.h"
 
 namespace ese {
+namespace tcp {
+
 class Connection : public std::enable_shared_from_this<Connection> {
  public:
   explicit Connection(Socket socket, Logger& logger);
@@ -25,4 +27,5 @@ class Connection : public std::enable_shared_from_this<Connection> {
   std::string message_;
   Logger& logger_;
 };
+}  // namespace tcp
 }  // namespace ese
