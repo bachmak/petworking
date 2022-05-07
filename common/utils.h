@@ -9,8 +9,28 @@ inline std::string GetCurrentTime() {
 }
 
 inline auto ReadNameWithPort(int argc, char const* argv[]) {
-  auto host_name = argc > 1 ? argv[1] : "";
-  auto host_port = argc > 2 ? argv[2] : "";
+  namespace po = boost::program_options;
+
+  auto description = po::options_description("All options");
+
+  auto host_opt = po::value<std::string>()->default_value("127.0.0.1");
+  auto port_opt = po::value<std::string>()->default_value("8001");
+
+  description.add_options()("help", "produce help message");
+  description.add_options()("host,h", host_opt, "host to connect/accept");
+  description.add_options()("port,p", port_opt, "port to connect/accept");
+
+  auto vm = po::variables_map();
+  po::store(po::parse_command_line(argc, argv, description), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << description << "\n";
+    std::exit(1);
+  }
+
+  auto host_name = vm["host"].as<std::string>();
+  auto host_port = vm["port"].as<std::string>();
   return std::make_pair(host_name, host_port);
 }
 }  // namespace ese

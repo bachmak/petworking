@@ -26,5 +26,5 @@ foreach (target ${targets})
 
     target_precompile_headers(${target} PRIVATE stdafx.h)
 
-    target_link_libraries(${target} PRIVATE boost_system ${CONAN_SYSTEM_LIBS})
+    target_link_libraries(${target} PRIVATE ${CONAN_LIBS})
 endforeach ()
