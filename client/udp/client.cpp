@@ -29,8 +29,7 @@ void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
   }
 
   if (bytes_read > 0) {
-    auto message = std::string_view(buffer_.data(), bytes_read);
-    logger_.Log("->", message);
+    logger_.Log("->", message_);
   }
 
   Write();
@@ -46,7 +45,7 @@ void Client::Write() {
 }
 
 void Client::Read() {
-  socket_.async_receive_from(boost::asio::buffer(buffer_), endpoint_,
+  socket_.async_receive_from(boost::asio::buffer(message_), endpoint_,
                              [this](auto... args) { OnRead(ESE_FWD(args)); });
 }
 }  // namespace udp

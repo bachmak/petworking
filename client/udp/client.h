@@ -25,7 +25,6 @@ class Client : public ese::Client {
  private:
   Socket socket_;
   Endpoint endpoint_;
-  std::array<char, 1024> buffer_;
   std::string message_;
   Logger& logger_;
 };
