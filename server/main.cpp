@@ -3,19 +3,24 @@
 #include "server/tcp/server.h"
 #include "server/udp/server.h"
 
+std::unique_ptr<ese::Server> CreateServer(
+    ese::Context& context, const ese::ConnectionSettings& settings,
+    ese::Logger& logger) {
+  if (settings.protocol == ese::Protocol::TCP) {
+    return std::make_unique<ese::tcp::Server>(context, settings.host,
+                                              settings.port, logger);
+  } else {
+    return std::make_unique<ese::udp::Server>(context, settings.host,
+                                              settings.port, logger);
+  }
+}
+
 int main(int argc, char const* argv[]) {
   auto context = ese::Context();
   auto logger = ese::Logger(std::clog, std::cin);
 
-  auto [protocol, host, port] = ese::ReadConnectionSettings(argc, argv);
-
-  auto server = [&]() -> std::unique_ptr<ese::Server> {
-    if (protocol == ese::Protocol::TCP) {
-      return std::make_unique<ese::tcp::Server>(context, host, port, logger);
-    } else {
-      return std::make_unique<ese::udp::Server>(context, host, port, logger);
-    }
-  }();
+  auto server =
+      CreateServer(context, ese::ReadConnectionSettings(argc, argv), logger);
 
   server->Start();
 
