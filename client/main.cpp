@@ -20,6 +20,7 @@ int main(int argc, char const* argv[]) {
     }
   }();
 
+  client->Start();
   context.run();
 
   return 0;
