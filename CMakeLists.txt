@@ -5,15 +5,30 @@ project(echo-server)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-aux_source_directory(client CLIENT_SOURCES)
-aux_source_directory(client/tcp CLIENT_TCP_SOURCES)
-aux_source_directory(client/udp CLIENT_UDP_SOURCES)
-aux_source_directory(server SERVER_SOURCES)
-aux_source_directory(server/tcp SERVER_TCP_SOURCES)
-aux_source_directory(server/udp SERVER_UDP_SOURCES)
+set (
+    CLIENT_SOURCE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/client
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/tcp
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/udp
+)
 
-add_executable(client ${CLIENT_TCP_SOURCES} ${CLIENT_UDP_SOURCES} ${CLIENT_SOURCES})
-add_executable(server ${SERVER_TCP_SOURCES} ${SERVER_UDP_SOURCES} ${SERVER_SOURCES})
+set (
+    SERVER_SOURCE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/server
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/tcp
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/udp
+)
+
+foreach(SOURCE_DIR ${CLIENT_SOURCE_DIRS})
+    aux_source_directory(${SOURCE_DIR} CLIENT_SOURCES)
+endforeach()
+
+foreach(SOURCE_DIR ${SERVER_SOURCE_DIRS})
+    aux_source_directory(${SOURCE_DIR} SERVER_SOURCES)
+endforeach()
+
+add_executable(client ${CLIENT_SOURCES})
+add_executable(server ${SERVER_SOURCES})
 
 set(targets client server)
 
