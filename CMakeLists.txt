@@ -5,8 +5,27 @@ project(echo-server)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-aux_source_directory(client CLIENT_SOURCES)
-aux_source_directory(server SERVER_SOURCES)
+set (
+    CLIENT_SOURCE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/client
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/tcp
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/udp
+)
+
+set (
+    SERVER_SOURCE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}/server
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/tcp
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/udp
+)
+
+foreach(SOURCE_DIR ${CLIENT_SOURCE_DIRS})
+    aux_source_directory(${SOURCE_DIR} CLIENT_SOURCES)
+endforeach()
+
+foreach(SOURCE_DIR ${SERVER_SOURCE_DIRS})
+    aux_source_directory(${SOURCE_DIR} SERVER_SOURCES)
+endforeach()
 
 add_executable(client ${CLIENT_SOURCES})
 add_executable(server ${SERVER_SOURCES})

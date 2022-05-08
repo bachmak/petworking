@@ -1,9 +1,10 @@
-#include "server/connection.h"
+#include "server/tcp/connection.h"
 
 #include "common/logger.h"
 #include "common/utils.h"
 
 namespace ese {
+namespace tcp {
 
 Connection::Connection(Socket socket, Logger& logger)
     : socket_(std::move(socket)), logger_(logger) {
@@ -58,4 +59,5 @@ void Connection::Write() {
                              connection->OnWrite(ESE_FWD(args));
                            });
 }
+}  // namespace tcp
 }  // namespace ese

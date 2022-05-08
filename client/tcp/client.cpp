@@ -1,26 +1,18 @@
-#include "client/client.h"
+#include "client/tcp/client.h"
 
 #include "common/logger.h"
 #include "common/utils.h"
 
 namespace ese {
-Client::Client(Context& context, const std::string& host_name,
-               const std::string& host_port, Logger& logger)
-    : socket_(context), resolver_(context), logger_(logger) {
-  resolver_.async_resolve(host_name, host_port,
-                          [this](auto... args) { OnResolved(ESE_FWD(args)); });
-}
+namespace tcp {
 
-void Client::OnResolved(ErrorCode ec, ResolveResults resolve_results) {
-  if (ec) {
-    ESE_LOG_EC(logger_, ec)
-    return;
-  }
+Client::Client(Context& context, const Ip& host, Port host_port, Logger& logger)
+    : socket_(context), endpoint_(host, host_port), logger_(logger) {}
 
-  logger_.LogLine("resolved", resolve_results);
-
+void Client::Start() {
+  auto endpoints = std::vector({endpoint_});
   boost::asio::async_connect(
-      socket_, resolve_results,
+      socket_, endpoints,
       [this](ErrorCode ec, const Endpoint& ep) { OnConnected(ec, ep); });
 }
 
@@ -71,4 +63,5 @@ void Client::Read() {
       socket_, buffer_, gMsgTerminator,
       [this](auto&&... args) { OnRead(ESE_FWD(args)); });
 }
+}  // namespace tcp
 }  // namespace ese

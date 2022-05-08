@@ -1,18 +1,17 @@
-#include "server/server.h"
+#include "server/tcp/server.h"
 
 #include "common/logger.h"
 #include "common/utils.h"
-#include "server/connection.h"
+#include "server/tcp/connection.h"
 
 namespace ese {
+namespace tcp {
 
-Server::Server(Context& context, const std::string& host,
-               const std::string& port, Logger& logger)
-    : acceptor_(context, Endpoint(Ip::from_string(host),
-                                  boost::lexical_cast<Port>(port))),
-      logger_(logger) {
+Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
+    : acceptor_(context, Endpoint(host, port)), logger_(logger) {}
+
+void Server::Start() {
   logger_.LogLine("waiting for connections...");
-
   acceptor_.async_accept(
       [this](ErrorCode ec, Socket sock) { OnAccepted(ec, std::move(sock)); });
 }
@@ -28,4 +27,5 @@ void Server::OnAccepted(ErrorCode ec, Socket socket) {
   auto connection = std::make_shared<Connection>(std::move(socket), logger_);
   connection->Start();
 }
+}  // namespace tcp
 }  // namespace ese
