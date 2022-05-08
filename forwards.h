@@ -19,6 +19,7 @@ using Endpoint = boost::asio::ip::udp::endpoint;
 }  // namespace udp
 
 class Logger;
+struct ConnectionSettings;
 
 using Context = boost::asio::io_context;
 using Buffer = boost::asio::streambuf;

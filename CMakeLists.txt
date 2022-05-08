@@ -27,6 +27,8 @@ foreach(SOURCE_DIR ${SERVER_SOURCE_DIRS})
     aux_source_directory(${SOURCE_DIR} SERVER_SOURCES)
 endforeach()
 
+message(STATUS ${SERVER_SOURCES})
+
 add_executable(client ${CLIENT_SOURCES})
 add_executable(server ${SERVER_SOURCES})
 
