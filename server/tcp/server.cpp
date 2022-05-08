@@ -12,10 +12,8 @@ Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
 
 void Server::Start() {
   logger_.LogLine("waiting for connections...");
-  auto on_accepted = [this](ErrorCode ec, Socket sock) {
-    OnAccepted(ec, std::move(sock));
-  };
-  acceptor_.async_accept(on_accepted);
+  acceptor_.async_accept(
+      [this](ErrorCode ec, Socket sock) { OnAccepted(ec, std::move(sock)); });
 }
 
 void Server::OnAccepted(ErrorCode ec, Socket socket) {

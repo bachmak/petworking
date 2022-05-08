@@ -44,6 +44,7 @@ void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
+
   Read();
 }
 }  // namespace udp
