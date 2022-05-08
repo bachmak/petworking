@@ -13,12 +13,18 @@ class Server : public ese::Server {
   void Start() override;
 
  private:
+  void Read();
+
+  void Write(std::size_t bytes_to_write);
+
   void OnRead(ErrorCode ec, std::size_t bytes_read);
 
   void OnWrite(ErrorCode ec, std::size_t bytes_write);
 
  private:
   Socket socket_;
+  Endpoint endpoint_;
+  std::array<char, 1024> buffer_;
   Logger& logger_;
 };
 }  // namespace udp
