@@ -25,7 +25,7 @@ class Client : public ese::Client {
  private:
   Socket socket_;
   Endpoint endpoint_;
-  std::string message_;
+  StaticBuf buffer_;
   Logger& logger_;
 };
 }  // namespace udp

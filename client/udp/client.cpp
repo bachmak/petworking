@@ -29,7 +29,7 @@ void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
   }
 
   if (bytes_read > 0) {
-    logger_.Log("->", message_);
+    logger_.Log("->", std::string_view(buffer_.data(), bytes_read));
   }
 
   Write();
@@ -37,15 +37,21 @@ void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
 
 void Client::Write() {
   logger_.Log("<- ");
-  logger_.ReadLine(message_);
-  message_ += gMsgTerminator;
 
-  socket_.async_send_to(boost::asio::buffer(message_), endpoint_,
+  buffer_.clear();
+
+  logger_.ReadLine(std::back_inserter(buffer_));
+
+  buffer_.insert(buffer_.end(), gMsgTerminator.begin(), gMsgTerminator.end());
+
+  auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
+  socket_.async_send_to(buffer, endpoint_,
                         [this](auto&&... args) { OnWrite(ESE_FWD(args)); });
 }
 
 void Client::Read() {
-  socket_.async_receive_from(boost::asio::buffer(message_), endpoint_,
+  auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
+  socket_.async_receive_from(buffer, endpoint_,
                              [this](auto... args) { OnRead(ESE_FWD(args)); });
 }
 }  // namespace udp

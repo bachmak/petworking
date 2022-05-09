@@ -27,8 +27,7 @@ class Client : public ese::Client {
  private:
   Socket socket_;
   Endpoint endpoint_;
-  Buffer buffer_;
-  std::string message_;
+  StreamBuf buffer_;
   Logger& logger_;
 };
 }  // namespace tcp

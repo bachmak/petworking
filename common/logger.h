@@ -23,6 +23,20 @@ class Logger {
 
   void ReadLine(std::string& line) { std::getline(is_, line); }
 
+  void ReadLine(StreamBuf& buf) {
+    auto str = std::string();
+    std::getline(is_, str);
+    auto os = std::ostream(&buf);
+    os << str;
+  }
+
+  template <typename It>
+  void ReadLine(It buf_begin) {
+    auto str = std::string();
+    std::getline(is_, str);
+    std::copy(str.begin(), str.end(), buf_begin);
+  }
+
   void Read(auto&&... args) { (is_ >> ... >> args); }
 
  private:

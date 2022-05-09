@@ -23,7 +23,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
 
  private:
   Socket socket_;
-  Buffer buffer_;
+  StreamBuf buffer_;
   std::string message_;
   Logger& logger_;
 };
