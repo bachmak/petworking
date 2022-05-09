@@ -22,7 +22,8 @@ class Logger;
 struct ConnectionSettings;
 
 using Context = boost::asio::io_context;
-using Buffer = boost::asio::streambuf;
+using StreamBuf = boost::asio::streambuf;
+using StaticBuf = boost::container::static_vector<char, 1024>;
 using ErrorCode = boost::system::error_code;
 
 using Ip = boost::asio::ip::address;

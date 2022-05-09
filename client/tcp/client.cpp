@@ -51,10 +51,13 @@ void Client::OnRead(ErrorCode ec, std::size_t) {
 
 void Client::Write() {
   logger_.Log("<- ");
-  logger_.ReadLine(message_);
-  message_ += gMsgTerminator;
+  logger_.ReadLine(buffer_);
 
-  boost::asio::async_write(socket_, boost::asio::buffer(message_),
+  for (auto c : gMsgTerminator) {
+    buffer_.sputc(c);
+  }
+
+  boost::asio::async_write(socket_, buffer_,
                            [this](auto&&... args) { OnWrite(ESE_FWD(args)); });
 }
 
