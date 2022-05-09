@@ -36,9 +36,13 @@ foreach(SOURCE_DIR ${COMMON_SOURCE_DIRS})
     aux_source_directory(${SOURCE_DIR} COMMON_SOURCES)
 endforeach()
 
-add_library(common STATIC ${COMMON_SOURCES})
 add_executable(client ${CLIENT_SOURCES})
 add_executable(server ${SERVER_SOURCES})
+
+add_library(common STATIC ${COMMON_SOURCES})
+add_library(boost_asio STATIC boost_asio.cpp)
+
+add_compile_definitions(BOOST_ASIO_SEPARATE_COMPILATION)
 
 file(GLOB_RECURSE
     ALL_SOURCES
@@ -50,6 +54,10 @@ add_custom_command(
     COMMAND /usr/bin/clang-format -i -style=file ${ALL_SOURCES}
 )
 
+target_precompile_headers(common PRIVATE stdafx.h)
+target_precompile_headers(server REUSE_FROM common)
+target_precompile_headers(client REUSE_FROM common)
+
 set(exe_targets client server)
 set(targets ${exe_targets} common)
 
@@ -60,10 +68,8 @@ foreach (target ${targets})
         ${target} PRIVATE
         ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
     )
-
-    target_precompile_headers(${target} PRIVATE stdafx.h)
 endforeach ()
 
 foreach(target ${exe_targets})
-    target_link_libraries(${target} PRIVATE common ${CONAN_LIBS})
+    target_link_libraries(${target} PRIVATE boost_asio common ${CONAN_LIBS})
 endforeach()
