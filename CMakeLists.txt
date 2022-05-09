@@ -40,26 +40,30 @@ add_library(common STATIC ${COMMON_SOURCES})
 add_executable(client ${CLIENT_SOURCES})
 add_executable(server ${SERVER_SOURCES})
 
-set(targets client server common)
+file(GLOB_RECURSE
+    ALL_SOURCES
+    *.[chi]pp *.[chi]xx *.cc *.hh *.ii *.[CHI]
+)
+
+add_custom_command(
+    TARGET common
+    COMMAND /usr/bin/clang-format -i -style=file ${ALL_SOURCES}
+)
+
+set(exe_targets client server)
+set(targets ${exe_targets} common)
 
 foreach (target ${targets})
     target_compile_options(${target} PRIVATE -std=c++2a)
 
-    set(COMMON_SOURCES_DIR common)
-    aux_source_directory(${COMMON_SOURCES_DIR} COMMON_SOURCES)
-    target_sources(${target} PRIVATE ${COMMON_SOURCES})
-
-    target_include_directories(${target} PRIVATE
-            ${COMMON_SOURCES_DIR} ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
-            )
+    target_include_directories(
+        ${target} PRIVATE
+        ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 
     target_precompile_headers(${target} PRIVATE stdafx.h)
-
-    target_link_libraries(${target} PRIVATE ${CONAN_LIBS})
 endforeach ()
 
-set(exe_targets client server)
-
-foreach(exe_target ${exe_targets})
-    target_link_libraries(${exe_target} PRIVATE ${common})
+foreach(target ${exe_targets})
+    target_link_libraries(${target} PRIVATE common ${CONAN_LIBS})
 endforeach()
