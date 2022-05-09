@@ -1,17 +1,30 @@
+#include "common/command_line_options.h"
+#include "common/connection_settings.h"
 #include "common/logger.h"
-#include "common/utils.h"
 #include "server/server_factory.h"
 
 int main(int argc, char const* argv[]) {
-  auto context = ese::Context();
-  auto logger = ese::Logger(std::clog, std::cin);
+  try {
+    auto cmd_options = ese::CommandLineOptions(argc, argv);
 
-  auto settings = ese::ReadConnectionSettings(argc, argv);
+    if (cmd_options.Help()) {
+      std::cout << cmd_options << std::endl;
+      return 0;
+    }
 
-  auto server = ese::CreateServer(context, settings, logger);
+    auto settings = ese::ConnectionSettings(cmd_options);
+    auto context = ese::Context();
+    auto logger = ese::Logger(std::cerr, std::cin);
 
-  server->Start();
+    auto server = ese::CreateServer(context, settings, logger);
 
-  context.run();
-  return 0;
+    server->Start();
+
+    context.run();
+
+    return 0;
+  } catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+    return 2;
+  }
 }

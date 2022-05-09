@@ -38,7 +38,6 @@ class BoostEchoServer(ConanFile):
         self.options["boost"].without_math = True
         self.options["boost"].without_mpi = True
         self.options["boost"].without_nowide = True
-        self.options["boost"].without_program_options = True
         self.options["boost"].without_python = True
         self.options["boost"].without_random = True
         self.options["boost"].without_regex = True
