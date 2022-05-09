@@ -36,30 +36,40 @@ foreach(SOURCE_DIR ${COMMON_SOURCE_DIRS})
     aux_source_directory(${SOURCE_DIR} COMMON_SOURCES)
 endforeach()
 
-add_library(common STATIC ${COMMON_SOURCES})
 add_executable(client ${CLIENT_SOURCES})
 add_executable(server ${SERVER_SOURCES})
 
-set(targets client server common)
+add_library(common STATIC ${COMMON_SOURCES})
+add_library(boost_asio STATIC boost_asio.cpp)
+
+add_compile_definitions(BOOST_ASIO_SEPARATE_COMPILATION)
+
+file(GLOB_RECURSE
+    ALL_SOURCES
+    *.[chi]pp *.[chi]xx *.cc *.hh *.ii *.[CHI]
+)
+
+add_custom_command(
+    TARGET common
+    COMMAND /usr/bin/clang-format -i -style=file ${ALL_SOURCES}
+)
+
+target_precompile_headers(common PRIVATE stdafx.h)
+target_precompile_headers(server REUSE_FROM common)
+target_precompile_headers(client REUSE_FROM common)
+
+set(exe_targets client server)
+set(targets ${exe_targets} common)
 
 foreach (target ${targets})
     target_compile_options(${target} PRIVATE -std=c++2a)
 
-    set(COMMON_SOURCES_DIR common)
-    aux_source_directory(${COMMON_SOURCES_DIR} COMMON_SOURCES)
-    target_sources(${target} PRIVATE ${COMMON_SOURCES})
-
-    target_include_directories(${target} PRIVATE
-            ${COMMON_SOURCES_DIR} ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
-            )
-
-    target_precompile_headers(${target} PRIVATE stdafx.h)
-
-    target_link_libraries(${target} PRIVATE ${CONAN_LIBS})
+    target_include_directories(
+        ${target} PRIVATE
+        ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 endforeach ()
 
-set(exe_targets client server)
-
-foreach(exe_target ${exe_targets})
-    target_link_libraries(${exe_target} PRIVATE ${common})
+foreach(target ${exe_targets})
+    target_link_libraries(${target} PRIVATE boost_asio common ${CONAN_LIBS})
 endforeach()
