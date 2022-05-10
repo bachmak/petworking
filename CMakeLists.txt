@@ -36,9 +36,11 @@ foreach(SOURCE_DIR ${COMMON_SOURCE_DIRS})
     aux_source_directory(${SOURCE_DIR} COMMON_SOURCES)
 endforeach()
 
-add_executable(client ${CLIENT_SOURCES})
-add_executable(server ${SERVER_SOURCES})
 
+add_executable(test ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp)
+
+add_library(client STATIC ${CLIENT_SOURCES})
+add_library(server STATIC ${SERVER_SOURCES})
 add_library(common STATIC ${COMMON_SOURCES})
 add_library(boost_asio STATIC boost_asio.cpp)
 
@@ -58,11 +60,11 @@ target_precompile_headers(common PRIVATE stdafx.h)
 target_precompile_headers(server REUSE_FROM common)
 target_precompile_headers(client REUSE_FROM common)
 
-set(exe_targets client server)
-set(targets ${exe_targets} common)
+set(libs client server common boost_asio)
+set(targets ${libs} test)
 
 foreach (target ${targets})
-    target_compile_options(${target} PRIVATE -std=c++2a)
+    target_compile_options(${target} PRIVATE -std=c++20)
 
     target_include_directories(
         ${target} PRIVATE
@@ -70,6 +72,4 @@ foreach (target ${targets})
     )
 endforeach ()
 
-foreach(target ${exe_targets})
-    target_link_libraries(${target} PRIVATE boost_asio common ${CONAN_LIBS})
-endforeach()
+target_link_libraries(test PRIVATE ${libs} ${CONAN_LIBS})
