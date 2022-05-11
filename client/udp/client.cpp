@@ -42,7 +42,7 @@ void Client::Write() {
 
   logger_.ReadLine(std::back_inserter(buffer_));
 
-  buffer_.insert(buffer_.end(), gMsgTerminator.begin(), gMsgTerminator.end());
+  std::ranges::copy(gMsgTerminator, std::back_inserter(buffer_));
 
   auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
   socket_.async_send_to(buffer, endpoint_,
