@@ -10,7 +10,7 @@ Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
     : socket_(context, Endpoint(host, port)), logger_(logger) {}
 
 void Server::Start() {
-  logger_.LogLine("waiting for connections...");
+  logger_.LogLine("waiting for message...");
   Read();
 }
 
