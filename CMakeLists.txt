@@ -37,7 +37,17 @@ foreach(SOURCE_DIR ${COMMON_SOURCE_DIRS})
 endforeach()
 
 
-add_executable(test ${CMAKE_CURRENT_SOURCE_DIR}/test/main.cpp)
+enable_testing()
+include(GoogleTest)
+
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/test TEST_SOURCES)
+
+foreach(TEST_SOURCE ${TEST_SOURCES})
+    get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
+    add_executable(${TEST_NAME} ${TEST_SOURCE}) 
+    list(APPEND tests ${TEST_NAME})
+    gtest_discover_tests(${TEST_NAME})
+endforeach()
 
 add_library(client STATIC ${CLIENT_SOURCES})
 add_library(server STATIC ${SERVER_SOURCES})
@@ -61,7 +71,7 @@ target_precompile_headers(server REUSE_FROM common)
 target_precompile_headers(client REUSE_FROM common)
 
 set(libs client server common boost_asio)
-set(targets ${libs} test)
+set(targets ${libs} ${tests})
 
 foreach (target ${targets})
     target_compile_options(${target} PRIVATE -std=c++20)
@@ -72,4 +82,6 @@ foreach (target ${targets})
     )
 endforeach ()
 
-target_link_libraries(test PRIVATE ${libs} ${CONAN_LIBS})
+foreach(test ${tests})
+    target_link_libraries(${test} PRIVATE ${libs} ${CONAN_LIBS})
+endforeach()

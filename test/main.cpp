@@ -2,9 +2,10 @@
 #include "common/command_line_options.h"
 #include "common/connection_settings.h"
 #include "common/logger.h"
+#include "gtest/gtest.h"
 #include "server/server_factory.h"
 
-int main(int argc, char const* argv[]) {
+TEST(EchoTest, TcpEcho) {
   auto client_context = ese::Context();
   auto server_context = ese::Context();
 
@@ -42,8 +43,6 @@ int main(int argc, char const* argv[]) {
   server_thread.join();
 
   for (const auto& message : messages) {
-    assert(os.str().find(message) != std::string::npos);
+    EXPECT_NE(os.str().find(message), std::string::npos);
   }
-
-  return 0;
 }
