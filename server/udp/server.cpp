@@ -31,10 +31,8 @@ void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
     return;
   }
 
-  if (bytes_read > 0) {
-    auto message = std::string_view(buffer_.data(), bytes_read);
-    logger_.Log("->", message);
-  }
+  auto message = std::string_view(buffer_.data(), bytes_read);
+  logger_.Log("->", message);
 
   Write(bytes_read);
 }

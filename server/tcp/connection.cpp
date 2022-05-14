@@ -29,9 +29,6 @@ void Connection::OnRead(ErrorCode ec, std::size_t bytes_read) {
   if (bytes_read > 0) {
     message_ = {std::istreambuf_iterator<char>(&buffer_),
                 std::istreambuf_iterator<char>()};
-    if (message_.size() <= gMsgTerminator.size()) {
-      return;
-    }
 
     logger_.Log(socket_.remote_endpoint(), "<-", message_);
   }
