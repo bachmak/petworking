@@ -10,7 +10,7 @@ Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
     : socket_(context, Endpoint(host, port)), logger_(logger) {}
 
 void Server::Start() {
-  logger_.LogLine("waiting for connections...");
+  logger_.LogLine("waiting for message...");
   Read();
 }
 
@@ -31,10 +31,8 @@ void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
     return;
   }
 
-  if (bytes_read > 0) {
-    auto message = std::string_view(buffer_.data(), bytes_read);
-    logger_.Log("->", message);
-  }
+  auto message = std::string_view(buffer_.data(), bytes_read);
+  logger_.Log("->", message);
 
   Write(bytes_read);
 }

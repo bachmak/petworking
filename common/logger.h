@@ -34,7 +34,7 @@ class Logger {
   void ReadLine(It buf_begin) {
     auto str = std::string();
     std::getline(is_, str);
-    std::copy(str.begin(), str.end(), buf_begin);
+    std::ranges::copy(str, buf_begin);
   }
 
   void Read(auto&&... args) { (is_ >> ... >> args); }

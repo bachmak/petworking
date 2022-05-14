@@ -8,7 +8,7 @@ class BoostEchoServer(ConanFile):
     name = "boost_echo_server"
     version = "0.1.0"
 
-    requires = 'boost/1.78.0'
+    requires = ['boost/1.78.0', 'gtest/1.11.0']
 
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False]}

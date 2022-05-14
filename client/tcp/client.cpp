@@ -27,9 +27,13 @@ void Client::OnConnected(ErrorCode ec, const Endpoint& endpoint) {
   Read();
 }
 
-void Client::OnWrite(ErrorCode ec, std::size_t) {
+void Client::OnWrite(ErrorCode ec, std::size_t bytes_written) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
+    return;
+  }
+
+  if (bytes_written == gMsgTerminator.size()) {
     return;
   }
 
