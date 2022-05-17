@@ -11,7 +11,10 @@ class Client : public ese::Client {
                   Logger& logger);
 
  public:
-  void Start() override;
+  void Start(std::function<void()> callback) override;
+
+  void SendMessage(std::string message,
+                   std::function<void(std::string)> callback) override;
 
  private:
   void OnWrite(ErrorCode ec, std::size_t bytes_written);
