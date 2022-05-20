@@ -13,23 +13,24 @@ class Client : public ese::Client {
                   Logger& logger);
 
  public:
-  void Start(std::function<void()> callback) override;
+  void Start(VoidCallback onStarted) override;
 
-  void SendMessage(std::string message,
-                   std::function<void(std::string)> callback) override;
+  void SendPacket(const Packet& packet,
+                  ClientCallback onPacketReceived) override;
 
  private:
   void OnConnected(ErrorCode ec, const Endpoint& endpoint,
-                   std::function<void()> callback);
+                   VoidCallback onStarted);
 
-  void OnWrite(ErrorCode ec, std::size_t bytes_written, std::size_t bytes_left);
+  void OnWrite(ErrorCode ec, std::size_t bytes_written, std::size_t bytes_left,
+               ClientCallback onPacketReceived);
 
   void OnRead(ErrorCode ec, std::size_t bytes_read, std::size_t bytes_left,
-              PacketPart packet_part);
+              ClientCallback onPacketReceived);
 
-  void Write(std::size_t bytes);
+  void Write(std::size_t bytes, ClientCallback onPacketReceived);
 
-  void Read(std::size_t bytes, PacketPart packet_part);
+  void Read(std::size_t bytes, ClientCallback onPacketReceived);
 
  private:
   Socket socket_;

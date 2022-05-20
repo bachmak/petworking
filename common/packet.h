@@ -4,6 +4,8 @@
 
 namespace ese {
 
+enum class PacketPart { Size, Body };
+
 enum class PacketType { Message, Command };
 
 NLOHMANN_JSON_SERIALIZE_ENUM(

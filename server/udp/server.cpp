@@ -9,7 +9,7 @@ namespace udp {
 Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
     : socket_(context, Endpoint(host, port)), logger_(logger) {}
 
-void Server::Start() {
+void Server::Start(ServerCallback onPacketReceived) {
   logger_.LogLine("waiting for message...");
   Read();
 }

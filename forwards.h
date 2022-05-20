@@ -18,6 +18,14 @@ using Socket = boost::asio::ip::udp::socket;
 using Endpoint = boost::asio::ip::udp::endpoint;
 }  // namespace udp
 
+class Packet;
+
+using VoidCallback = std::function<void()>;
+using ClientCallback = std::function<void(Packet)>;
+using ServerCallback = std::function<Packet(Packet)>;
+
+using ServerCallbackPtr = std::shared_ptr<ServerCallback>;
+
 class Logger;
 struct ConnectionSettings;
 

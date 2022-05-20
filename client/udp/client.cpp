@@ -11,10 +11,10 @@ Client::Client(Context& context, const Ip& host, Port host_port, Logger& logger)
   socket_.open(boost::asio::ip::udp::v4());
 }
 
-void Client::Start(std::function<void()> callback) { callback(); }
+void Client::Start(VoidCallback onStarted) { onStarted(); }
 
-void Client::SendMessage(std::string message,
-                         std::function<void(std::string)> callback) {}
+void Client::SendPacket(const Packet& packet, ClientCallback onPacketReceived) {
+}
 
 void Client::OnWrite(ErrorCode ec, std::size_t bytes_written) {
   if (ec) {

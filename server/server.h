@@ -6,7 +6,9 @@ namespace ese {
 
 class Server {
  public:
-  virtual void Start() = 0;
   virtual ~Server() = default;
+
+ public:
+  virtual void Start(ServerCallback onPacketReceived) = 0;
 };
 }  // namespace ese

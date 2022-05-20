@@ -3,6 +3,7 @@
 #include "client/client_factory.h"
 #include "common/connection_settings.h"
 #include "common/logger.h"
+#include "common/packet.h"
 #include "gtest/gtest.h"
 #include "server/server_factory.h"
 
@@ -10,29 +11,48 @@ namespace ese {
 namespace test {
 namespace scenario {
 
+auto ServerOnPacketReceived(Packet packet) {}
+
 void Echo(const SettingsProvider& settingsProvider) {
+  testing::internal::CaptureStderr();
+  std::cerr << __FUNCTION__ << std::endl;
+  std::string cerr = testing::internal::GetCapturedStderr();
   auto client_context = Context();
   auto server_context = Context();
 
   auto connectionSettings = ConnectionSettings(settingsProvider);
 
-  auto messages = std::vector<std::string_view>(
-      {"test message\n", "another test message\n", "test\n"});
+  auto packets =
+      std::vector<Packet>({Packet(PacketType::Message, "test message"),
+                           Packet(PacketType::Message, "another test message"),
+                           Packet(PacketType::Message, "test")});
 
-  auto client_os = std::ostringstream();
-  auto client_is = std::stringstream();
-  std::ranges::for_each(messages, [&](const auto& msg) { client_is << msg; });
-  auto client_logger = Logger(client_os, client_is);
+  auto client_logger = Logger(std::cerr, std::cin);
 
-  auto server_os = std::ostringstream();
-  auto server_is = std::istringstream();
-  auto server_logger = Logger(server_os, server_is);
+  auto server_logger = Logger(std::cerr, std::cin);
 
   auto server = CreateServer(server_context, connectionSettings, server_logger);
   auto client = CreateClient(client_context, connectionSettings, client_logger);
 
-  server->Start();
-  client->Start();
+  auto serverOnPacket = [](Packet packet) {
+    return Packet(PacketType::Message, packet.Body());
+  };
+
+  ClientCallback clientOnPacket = [&](Packet packet) {
+    EXPECT_NE(packet.Body(), packets.back().Body());
+    packets.pop_back();
+    if (!packets.empty()) {
+      client->SendPacket(packets.back(), clientOnPacket);
+    }
+  };
+
+  auto clientOnConnected = [&]() {
+    client->SendPacket(packets.back(), clientOnPacket);
+    std::cerr << "Packet sent\n";
+  };
+
+  server->Start(serverOnPacket);
+  client->Start(clientOnConnected);
 
   auto server_thread = std::thread([&] { server_context.run(); });
 
@@ -41,10 +61,7 @@ void Echo(const SettingsProvider& settingsProvider) {
   server_context.stop();
   server_thread.join();
 
-  for (const auto& message : messages) {
-    EXPECT_NE(client_os.str().find(message), std::string::npos);
-    EXPECT_NE(server_os.str().find(message), std::string::npos);
-  }
+  EXPECT_TRUE(packets.empty());
 }
 }  // namespace scenario
 }  // namespace test

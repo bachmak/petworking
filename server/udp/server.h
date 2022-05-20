@@ -10,7 +10,7 @@ class Server : public ese::Server {
   explicit Server(Context& context, const Ip& host, Port port, Logger& logger);
 
  public:
-  void Start() override;
+  void Start(ServerCallback onPacketReceived) override;
 
  private:
   void Read();

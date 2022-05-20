@@ -10,93 +10,98 @@ namespace tcp {
 Client::Client(Context& context, const Ip& host, Port host_port, Logger& logger)
     : socket_(context), endpoint_(host, host_port), logger_(logger) {}
 
-void Client::Start(std::function<void()> callback) {
+void Client::Start(VoidCallback onStarted) {
+  std::cerr << __FUNCTION__ << std::endl;
   auto endpoints = std::vector({endpoint_});
   boost::asio::async_connect(
       socket_, endpoints,
-      [this, callback = std::move(callback)](ErrorCode ec, const Endpoint& ep) {
-        OnConnected(ec, ep, std::move(callback));
+      [this, cb = std::move(onStarted)](ErrorCode ec, const Endpoint& ep) {
+        OnConnected(ec, ep, std::move(cb));
       });
 }
 
-void Client::SendMessage(std::string message,
-                         std::function<void(std::string)> callback) {
-  auto packet = Packet(PacketType::Message, std::move(message));
+void Client::SendPacket(const Packet& packet, ClientCallback onPacketReceived) {
+  std::cerr << __FUNCTION__ << std::endl;
   auto json = nlohmann::json(packet);
+  std::cerr << json << std::endl;
 
   auto os = std::ostream(&buffer_);
   auto body_size = json.size();
 
   os.write(reinterpret_cast<char*>(&body_size), sizeof(body_size)) << json;
 
-  Write(sizeof(body_size) + json.size());
+  Write(sizeof(body_size) + json.size(), std::move(onPacketReceived));
 }
 
 void Client::OnConnected(ErrorCode ec, const Endpoint& endpoint,
-                         std::function<void()> callback) {
+                         VoidCallback onStarted) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
-  callback();
+  onStarted();
 }
 
 void Client::OnWrite(ErrorCode ec, std::size_t bytes_written,
-                     std::size_t bytes_left) {
+                     std::size_t bytes_left, ClientCallback onPacketReceived) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
   if (bytes_left -= bytes_written; bytes_left == 0) {
-    Read(sizeof(nlohmann::json::size_type), PacketPart::Size);
+    Read(sizeof(nlohmann::json::size_type), std::move(onPacketReceived));
   } else {
-    Write(bytes_left);
+    Write(bytes_left, std::move(onPacketReceived));
   }
 }
 
 void Client::OnRead(ErrorCode ec, std::size_t bytes_read,
-                    std::size_t bytes_left, PacketPart packet_part) {
+                    std::size_t bytes_left, ClientCallback onPacketReceived) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
-  if (packet_part == PacketPart::Size) {
-    if (bytes_read >= bytes_left) {
-      auto body_size = nlohmann::json::size_type();
+  static auto packetPart = PacketPart::Size;
+
+  if (std::exchange(packetPart, PacketPart::Body) == PacketPart::Size) {
+    auto body_size = nlohmann::json::size_type();
+    if (bytes_read >= sizeof(body_size)) {
       auto is = std::istream(&buffer_);
       is.read(reinterpret_cast<char*>(&body_size), sizeof(body_size));
-      if (bytes_read -= sizeof(body_size); bytes_read < body_size) {
-        Read(body_size - bytes_read, PacketPart::Body);
-      } else {
-        auto packet = Packet();
-        auto json = nlohmann::json(packet);
+
+      if (bytes_read -= sizeof(body_size); bytes_read == body_size) {
+        auto json = nlohmann::json();
         is >> json;
-        if (packet.Type() == PacketType::Message) {
-        }
+        std::cout << "Response: " << json << std::endl;
+        auto packet = json.get<Packet>();
+        return onPacketReceived(std::move(packet));
       }
     } else {
-      bytes_left -= bytes_read;
-      Read(bytes_left, PacketPart::Size);
+      bytes_left = sizeof(body_size) - bytes_read;
+      packetPart = PacketPart::Size;
+      return Read(bytes_left, std::move(onPacketReceived));
     }
-  } else {
-    // Read(bytes_left, );
   }
+  return Read(bytes_left - bytes_read, std::move(onPacketReceived));
 }
 
-void Client::Write(std::size_t bytes) {
-  boost::asio::async_write(socket_, buffer_, [this, bytes](auto&&... args) {
-    OnWrite(ESE_FWD(args), bytes);
-  });
+void Client::Write(std::size_t bytes, ClientCallback onPacketReceived) {
+  boost::asio::async_write(
+      socket_, buffer_,
+      [this, bytes, cb = std::move(onPacketReceived)](auto&&... args) {
+        OnWrite(ESE_FWD(args), bytes, std::move(cb));
+      });
 }
 
-void Client::Read(std::size_t bytes, PacketPart packet_part) {
-  boost::asio::async_read(socket_, buffer_,
-                          [this, bytes, packet_part](auto&&... args) {
-                            OnRead(ESE_FWD(args), bytes, packet_part);
-                          });
+void Client::Read(std::size_t bytes, ClientCallback onPacketReceived) {
+  boost::asio::async_read(
+      socket_, buffer_,
+      [this, bytes, cb = std::move(onPacketReceived)](auto&&... args) {
+        OnRead(ESE_FWD(args), bytes, std::move(cb));
+      });
 }
 }  // namespace tcp
 }  // namespace ese

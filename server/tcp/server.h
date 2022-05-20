@@ -10,10 +10,11 @@ class Server : public ese::Server {
   explicit Server(Context& context, const Ip& host, Port port, Logger& logger);
 
  public:
-  void Start() override;
+  void Start(ServerCallback onPacketReceived) override;
 
  private:
-  void OnAccepted(ErrorCode ec, Socket socket);
+  void OnAccepted(ErrorCode ec, Socket socket,
+                  ServerCallbackPtr onPacketReceived);
 
  private:
   Acceptor acceptor_;
