@@ -14,9 +14,9 @@ class Connection : public std::enable_shared_from_this<Connection> {
   void Start();
 
  private:
-  void OnRead(ErrorCode ec, std::size_t bytes_read, std::size_t bytes_left);
+  void OnRead(ErrorCode ec);
 
-  void OnWrite(ErrorCode ec, std::size_t bytes_written, std::size_t bytes_left);
+  void OnWrite(ErrorCode ec);
 
   void Read(std::size_t bytes);
 
@@ -27,6 +27,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
   StreamBuf buffer_;
   const ServerCallbackPtr on_packet_received_;
   Logger& logger_;
+  std::size_t request_packet_body_size_;
 };
 }  // namespace tcp
 }  // namespace ese

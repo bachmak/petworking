@@ -22,11 +22,9 @@ class Client : public ese::Client {
   void OnConnected(ErrorCode ec, const Endpoint& endpoint,
                    VoidCallback onStarted);
 
-  void OnWrite(ErrorCode ec, std::size_t bytes_written, std::size_t bytes_left,
-               ClientCallback onPacketReceived);
+  void OnWrite(ErrorCode ec, ClientCallback onPacketReceived);
 
-  void OnRead(ErrorCode ec, std::size_t bytes_read, std::size_t bytes_left,
-              ClientCallback onPacketReceived);
+  void OnRead(ErrorCode ec, ClientCallback onPacketReceived);
 
   void Write(std::size_t bytes, ClientCallback onPacketReceived);
 
@@ -37,6 +35,7 @@ class Client : public ese::Client {
   Endpoint endpoint_;
   StreamBuf buffer_;
   Logger& logger_;
+  std::size_t response_packet_body_size_;
 };
 }  // namespace tcp
 }  // namespace ese
