@@ -14,9 +14,6 @@ namespace scenario {
 auto ServerOnPacketReceived(Packet packet) {}
 
 void Echo(const SettingsProvider& settingsProvider) {
-  testing::internal::CaptureStderr();
-  std::cerr << __FUNCTION__ << std::endl;
-  std::string cerr = testing::internal::GetCapturedStderr();
   auto client_context = Context();
   auto server_context = Context();
 
@@ -39,7 +36,7 @@ void Echo(const SettingsProvider& settingsProvider) {
   };
 
   ClientCallback clientOnPacket = [&](Packet packet) {
-    EXPECT_NE(packet.Body(), packets.back().Body());
+    EXPECT_EQ(packet.Body(), packets.back().Body());
     packets.pop_back();
     if (!packets.empty()) {
       client->SendPacket(packets.back(), clientOnPacket);
@@ -48,7 +45,6 @@ void Echo(const SettingsProvider& settingsProvider) {
 
   auto clientOnConnected = [&]() {
     client->SendPacket(packets.back(), clientOnPacket);
-    std::cerr << "Packet sent\n";
   };
 
   server->Start(serverOnPacket);
