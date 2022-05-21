@@ -84,9 +84,4 @@ endforeach ()
 
 foreach(test ${tests})
     target_link_libraries(${test} PRIVATE ${libs} ${CONAN_LIBS})
-    message(STATUS ${test})
-endforeach()
-
-foreach(lib ${CONAN_LIBS})
-    message(STATUS ${lib})
 endforeach()
