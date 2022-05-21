@@ -15,6 +15,12 @@ std::size_t WritePacketWithSize(StreamBuf& buffer, const Packet& packet) {
   return sizeof(body_size) + body_size;
 }
 
+std::size_t WritePacket(StaticBuf& buffer, const Packet& packet) {
+  std::string body = nlohmann::json(packet).dump();
+  std::memcpy(buffer.data(), body.data(), body.size());
+  return body.size();
+}
+
 std::size_t ReadSize(StreamBuf& buffer) {
   auto is = std::istream(&buffer);
   auto body_size = std::size_t();
@@ -27,6 +33,11 @@ Packet ReadPacket(StreamBuf& buffer) {
   auto is = std::istream(&buffer);
   auto json = nlohmann::json();
   is >> json;
+  return json.get<Packet>();
+}
+
+Packet ReadPacket(StaticBuf& buffer, std::size_t size) {
+  auto json = nlohmann::json::parse(buffer.begin(), buffer.begin() + size);
   return json.get<Packet>();
 }
 }  // namespace utils

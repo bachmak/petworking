@@ -11,19 +11,21 @@ class Client : public ese::Client {
                   Logger& logger);
 
  public:
-  void Start(VoidCallback onStarted) override;
+  void Start(VoidCallback on_started) override;
 
   void SendPacket(const Packet& packet,
-                  ClientCallback onPacketReceived) override;
+                  ClientCallback on_packet_received) override;
 
  private:
-  void OnWrite(ErrorCode ec, std::size_t bytes_written);
+  void OnWrite(ErrorCode ec, std::size_t bytes_written,
+               ClientCallback on_packet_received);
 
-  void OnRead(ErrorCode ec, std::size_t bytes_read);
+  void OnRead(ErrorCode ec, std::size_t bytes_read,
+              const ClientCallback& on_packet_received);
 
-  void Write();
+  void Write(std::size_t bytes, ClientCallback on_packet_received);
 
-  void Read();
+  void Read(ClientCallback on_packet_received);
 
  private:
   Socket socket_;

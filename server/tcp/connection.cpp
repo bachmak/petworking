@@ -16,7 +16,8 @@ Connection::Connection(Socket socket, Logger& logger,
   logger_.LogLine("new connection:", socket_);
 }
 
-Connection::~Connection() { logger_.LogLine("closed", socket_); }
+Connection::~Connection() { /*logger_.LogLine("closed", socket_);*/
+}
 
 void Connection::Start() { Read(sizeof(std::size_t)); }
 

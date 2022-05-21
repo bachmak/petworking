@@ -10,8 +10,8 @@ TEST(EchoTest, EchoTcp) {
 }
 
 TEST(EchoTest, EchoUdp) {
-  // using namespace ese;
+  using namespace ese;
 
-  // auto settingsProvider = test::SettingsProvider("udp", "127.0.0.1",
-  // "32743"); test::scenario::Echo(settingsProvider);
+  auto settingsProvider = test::SettingsProvider("udp", "127.0.0.1", "32743");
+  test::scenario::Echo(settingsProvider);
 }

@@ -12,9 +12,13 @@ inline std::string GetCurrentTime() {
 
 std::size_t WritePacketWithSize(StreamBuf& buffer, const Packet& packet);
 
+std::size_t WritePacket(StaticBuf& buffer, const Packet& packet);
+
 std::size_t ReadSize(StreamBuf& buffer);
 
 Packet ReadPacket(StreamBuf& buffer);
+
+Packet ReadPacket(StaticBuf& buffer, std::size_t size);
 }  // namespace utils
 }  // namespace ese
 

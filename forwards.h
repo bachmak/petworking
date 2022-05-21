@@ -31,7 +31,7 @@ struct ConnectionSettings;
 
 using Context = boost::asio::io_context;
 using StreamBuf = boost::asio::streambuf;
-using StaticBuf = boost::container::static_vector<char, 1024>;
+using StaticBuf = std::array<char, 8192>;
 using ErrorCode = boost::system::error_code;
 
 using Ip = boost::asio::ip::address;
