@@ -24,9 +24,9 @@ void Echo(const SettingsProvider& settingsProvider) {
                            Packet(PacketType::Message, "another test message"),
                            Packet(PacketType::Message, "test")});
 
-  auto client_logger = Logger(std::cerr, std::cin);
+  auto client_logger = Logger(std::clog);
 
-  auto server_logger = Logger(std::cerr, std::cin);
+  auto server_logger = Logger(std::clog);
 
   auto server = CreateServer(server_context, connectionSettings, server_logger);
   auto client = CreateClient(client_context, connectionSettings, client_logger);

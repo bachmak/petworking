@@ -47,8 +47,6 @@ void Client::Write() {
 
   buffer_.clear();
 
-  logger_.ReadLine(std::back_inserter(buffer_));
-
   std::ranges::copy(gMsgTerminator, std::back_inserter(buffer_));
 
   auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
