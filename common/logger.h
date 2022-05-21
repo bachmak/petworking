@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils.h"
+#include "common/utils.h"
 
 #define ESE_LOG_EC(logger, ec) \
   logger.LogLine("error:", ec.message(), "from func", BOOST_CURRENT_FUNCTION);
@@ -17,7 +17,7 @@ class Logger {
   }
 
   void Log(auto&&... args) {
-    os_ << GetCurrentTime();
+    os_ << utils::GetCurrentTime();
     ((os_ << " " << args), ...);
   }
 
