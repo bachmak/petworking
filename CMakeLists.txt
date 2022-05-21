@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 
 project(echo-server)
 
+set(CMAKE_CXX_STANDARD 20)
+
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
@@ -42,7 +44,7 @@ foreach(SOURCE_DIR ${COMMON_SOURCE_DIRS})
 endforeach()
 
 foreach(SOURCE_DIR ${TEST_HELPERS_DIRS})
-    aux_source_directory(${SOURCE_DIR} TEST_HELPERS_SOURCES) 
+    aux_source_directory(${SOURCE_DIR} TEST_HELPERS_SOURCES)
 endforeach()
 
 enable_testing()
@@ -52,7 +54,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/test TEST_SOURCES)
 
 foreach(TEST_SOURCE ${TEST_SOURCES})
     get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
-    add_executable(${TEST_NAME} ${TEST_SOURCE}) 
+    add_executable(${TEST_NAME} ${TEST_SOURCE})
     list(APPEND tests ${TEST_NAME})
     gtest_discover_tests(${TEST_NAME})
 endforeach()
@@ -65,16 +67,6 @@ add_library(boost_asio STATIC boost_asio.cpp)
 
 add_compile_definitions(BOOST_ASIO_SEPARATE_COMPILATION)
 
-file(GLOB_RECURSE
-    ALL_SOURCES
-    *.[chi]pp *.[chi]xx *.cc *.hh *.ii *.[CHI]
-)
-
-add_custom_command(
-    TARGET common
-    COMMAND /usr/bin/clang-format -i -style=file ${ALL_SOURCES}
-)
-
 target_precompile_headers(common PRIVATE stdafx.h)
 target_precompile_headers(server REUSE_FROM common)
 target_precompile_headers(client REUSE_FROM common)
@@ -84,8 +76,6 @@ set(libs test_helpers client server common boost_asio)
 set(targets ${libs} ${tests})
 
 foreach (target ${targets})
-    target_compile_options(${target} PRIVATE -std=c++20)
-
     target_include_directories(
         ${target} PRIVATE
         ${CONAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}
