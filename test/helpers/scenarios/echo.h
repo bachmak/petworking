@@ -21,7 +21,8 @@ struct SettingsProvider {
 
 namespace scenario {
 
-void Echo(const SettingsProvider& settingsProvider);
+void Echo(const SettingsProvider& settings_provider,
+          const std::size_t packet_count);
 }
 }  // namespace test
 }  // namespace ese
