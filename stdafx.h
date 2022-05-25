@@ -8,6 +8,8 @@
 #include <future>
 #include <iostream>
 #include <iterator>
+#include <nlohmann/json.hpp>
+#include <random>
 #include <span>
 #include <string>
 #include <string_view>

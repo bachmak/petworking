@@ -18,12 +18,20 @@ using Socket = boost::asio::ip::udp::socket;
 using Endpoint = boost::asio::ip::udp::endpoint;
 }  // namespace udp
 
+class Packet;
+
+using VoidCallback = std::function<void()>;
+using ClientCallback = std::function<void(Packet)>;
+using ServerCallback = std::function<Packet(Packet)>;
+
+using ServerCallbackPtr = std::shared_ptr<ServerCallback>;
+
 class Logger;
 struct ConnectionSettings;
 
 using Context = boost::asio::io_context;
 using StreamBuf = boost::asio::streambuf;
-using StaticBuf = boost::container::static_vector<char, 1024>;
+using StaticBuf = std::array<char, 8192>;
 using ErrorCode = boost::system::error_code;
 
 using Ip = boost::asio::ip::address;

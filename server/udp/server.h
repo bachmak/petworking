@@ -10,7 +10,7 @@ class Server : public ese::Server {
   explicit Server(Context& context, const Ip& host, Port port, Logger& logger);
 
  public:
-  void Start() override;
+  void Start(ServerCallback on_packet_received) override;
 
  private:
   void Read();
@@ -23,8 +23,9 @@ class Server : public ese::Server {
 
  private:
   Socket socket_;
-  Endpoint endpoint_;
-  std::array<char, 1024> buffer_;
+  Endpoint remote_endpoint_;
+  std::array<char, 8192> buffer_;
+  ServerCallback on_packet_received_;
   Logger& logger_;
 };
 }  // namespace udp

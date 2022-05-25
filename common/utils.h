@@ -3,11 +3,40 @@
 #include "forwards.h"
 
 namespace ese {
+namespace utils {
 
 inline std::string GetCurrentTime() {
   using namespace boost::posix_time;
   return to_simple_string(second_clock::local_time());
 }
+
+std::size_t WritePacketWithSize(StreamBuf& buffer, const Packet& packet);
+
+std::size_t WritePacket(StaticBuf& buffer, const Packet& packet);
+
+std::size_t ReadSize(StreamBuf& buffer);
+
+Packet ReadPacket(StreamBuf& buffer);
+
+Packet ReadPacket(StaticBuf& buffer, std::size_t size);
+
+class StringGenerator {
+ public:
+  explicit StringGenerator(auto&&... args)
+      : gen_(rd_()), string_(ESE_FWD(args)) {}
+
+ public:
+  operator std::string() const {
+    std::shuffle(string_.begin(), string_.end(), gen_);
+    return string_;
+  }
+
+ private:
+  mutable std::random_device rd_;
+  mutable std::mt19937 gen_;
+  mutable std::string string_;
+};
+}  // namespace utils
 }  // namespace ese
 
 namespace std {

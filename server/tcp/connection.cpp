@@ -1,63 +1,67 @@
 #include "server/tcp/connection.h"
 
 #include "common/logger.h"
+#include "common/packet.h"
 #include "common/utils.h"
 
 namespace ese {
 namespace tcp {
 
-Connection::Connection(Socket socket, Logger& logger)
-    : socket_(std::move(socket)), logger_(logger) {
+Connection::Connection(Socket socket, Logger& logger,
+                       ServerCallbackPtr on_packet_received)
+    : socket_(std::move(socket)),
+      on_packet_received_(std::move(on_packet_received)),
+      logger_(logger),
+      request_packet_body_size_(0u) {
   logger_.LogLine("new connection:", socket_);
-
-  auto msg_stream = std::ostringstream();
-  msg_stream << "you're connected from " << socket_.remote_endpoint()
-             << gMsgTerminator;
-  message_ = msg_stream.str();
 }
 
-Connection::~Connection() { logger_.LogLine("closed", socket_); }
+Connection::~Connection() { /*logger_.LogLine("closed", socket_);*/
+}
 
-void Connection::Start() { Write(); }
+void Connection::Start() { Read(sizeof(std::size_t)); }
 
-void Connection::OnRead(ErrorCode ec, std::size_t bytes_read) {
+void Connection::OnRead(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
-  if (bytes_read > 0) {
-    message_ = {std::istreambuf_iterator<char>(&buffer_),
-                std::istreambuf_iterator<char>()};
+  if (std::exchange(request_packet_body_size_, 0u) == 0u) {
+    request_packet_body_size_ = utils::ReadSize(buffer_);
+    Read(request_packet_body_size_);
+  } else {
+    auto request = utils::ReadPacket(buffer_);
+    Packet response = on_packet_received_->operator()(request);
 
-    logger_.Log(socket_.remote_endpoint(), "<-", message_);
+    auto response_packet_size = utils::WritePacketWithSize(buffer_, response);
+    Write(response_packet_size);
   }
-
-  Write();
 }
 
-void Connection::OnWrite(ErrorCode ec, std::size_t) {
+void Connection::OnWrite(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
-  Read();
+  Read(sizeof(std::size_t));
 }
 
-void Connection::Read() {
-  boost::asio::async_read_until(
-      socket_, buffer_, gMsgTerminator,
-      [connection = shared_from_this()](auto&&... args) {
-        connection->OnRead(ESE_FWD(args));
+void Connection::Read(std::size_t bytes) {
+  boost::asio::async_read(
+      socket_, buffer_, boost::asio::transfer_exactly(bytes),
+      [connection = shared_from_this()](ErrorCode ec, std::size_t) {
+        connection->OnRead(ec);
       });
 }
 
-void Connection::Write() {
-  boost::asio::async_write(socket_, boost::asio::buffer(message_),
-                           [connection = shared_from_this()](auto&&... args) {
-                             connection->OnWrite(ESE_FWD(args));
-                           });
+void Connection::Write(std::size_t bytes) {
+  boost::asio::async_write(
+      socket_, buffer_, boost::asio::transfer_exactly(bytes),
+      [connection = shared_from_this()](ErrorCode ec, std::size_t) {
+        connection->OnWrite(ec);
+      });
 }
 }  // namespace tcp
 }  // namespace ese
