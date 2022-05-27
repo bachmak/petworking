@@ -2,16 +2,17 @@
 
 #include "forwards.h"
 
-namespace ese {
-namespace tcp {
+namespace ese::tcp::server {
 
 class Connection : public std::enable_shared_from_this<Connection> {
  public:
-  explicit Connection(Socket socket, Logger& logger,
-                      ServerCallbackPtr on_packet_received);
+  explicit Connection(Socket socket, const OnPacketReceived& on_packet_received,
+                      Logger& logger);
   ~Connection();
 
   void Start();
+
+  void SendPacket(const Packet& packet);
 
  private:
   void OnRead(ErrorCode ec);
@@ -25,9 +26,8 @@ class Connection : public std::enable_shared_from_this<Connection> {
  private:
   Socket socket_;
   StreamBuf buffer_;
-  const ServerCallbackPtr on_packet_received_;
+  const OnPacketReceived& on_packet_received_;
   Logger& logger_;
-  std::size_t request_packet_body_size_;
+  std::size_t packet_body_size_;
 };
-}  // namespace tcp
-}  // namespace ese
+}  // namespace ese::tcp::server

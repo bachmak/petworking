@@ -1,7 +1,6 @@
 #include "common/connection_settings.h"
 
-namespace ese {
-namespace test {
+namespace ese::test {
 
 struct SettingsProvider {
   explicit SettingsProvider(std::string protocol, std::string host,
@@ -24,5 +23,4 @@ namespace scenario {
 void Echo(const SettingsProvider& settings_provider,
           const std::size_t packet_count);
 }
-}  // namespace test
-}  // namespace ese
+}  // namespace ese::test

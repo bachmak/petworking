@@ -1,41 +1,40 @@
 #pragma once
 
-#include "client/client.h"
+#include "forwards.h"
 
-namespace ese {
-namespace tcp {
+namespace ese::tcp::client {
 
 enum class PacketPart { Size, Body };
 
-class Client : public ese::Client {
+class Client {
  public:
   explicit Client(Context& context, const Ip& host, Port host_port,
+                  OnConnected on_connected, OnPacketReceived on_packet_received,
                   Logger& logger);
 
  public:
-  void Start(VoidCallback onStarted) override;
+  void Start();
 
-  void SendPacket(const Packet& packet,
-                  ClientCallback onPacketReceived) override;
+  void SendPacket(const Packet& packet);
 
  private:
-  void OnConnected(ErrorCode ec, const Endpoint& endpoint,
-                   VoidCallback onStarted);
+  void OnConnectedImpl(ErrorCode ec, const Endpoint& endpoint);
 
-  void OnWrite(ErrorCode ec, ClientCallback onPacketReceived);
+  void OnWrite(ErrorCode ec);
 
-  void OnRead(ErrorCode ec, ClientCallback onPacketReceived);
+  void OnRead(ErrorCode ec);
 
-  void Write(std::size_t bytes, ClientCallback onPacketReceived);
+  void Write(std::size_t bytes);
 
-  void Read(std::size_t bytes, ClientCallback onPacketReceived);
+  void Read(std::size_t bytes);
 
  private:
   Socket socket_;
   Endpoint endpoint_;
   StreamBuf buffer_;
+  const OnConnected on_connected_;
+  const OnPacketReceived on_packet_received_;
   Logger& logger_;
-  std::size_t response_packet_body_size_;
+  std::size_t packet_body_size_;
 };
-}  // namespace tcp
-}  // namespace ese
+}  // namespace ese::tcp::client

@@ -2,8 +2,7 @@
 
 #include "forwards.h"
 
-namespace ese {
-namespace utils {
+namespace ese::utils {
 
 inline std::string GetCurrentTime() {
   using namespace boost::posix_time;
@@ -36,8 +35,7 @@ class StringGenerator {
   mutable std::mt19937 gen_;
   mutable std::string string_;
 };
-}  // namespace utils
-}  // namespace ese
+}  // namespace ese::utils
 
 namespace std {
 

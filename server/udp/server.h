@@ -1,16 +1,18 @@
 #pragma once
 
-#include "server/server.h"
+#include "forwards.h"
 
-namespace ese {
-namespace udp {
+namespace ese::udp::server {
 
-class Server : public ese::Server {
+class Server {
  public:
-  explicit Server(Context& context, const Ip& host, Port port, Logger& logger);
+  explicit Server(Context& context, const Ip& host, Port port,
+                  OnPacketReceived on_packet_received, Logger& logger);
 
  public:
-  void Start(ServerCallback on_packet_received) override;
+  void Start();
+
+  void SendPacket(const Packet& packet);
 
  private:
   void Read();
@@ -24,9 +26,8 @@ class Server : public ese::Server {
  private:
   Socket socket_;
   Endpoint remote_endpoint_;
-  std::array<char, 8192> buffer_;
-  ServerCallback on_packet_received_;
+  StaticBuf buffer_;
+  const OnPacketReceived on_packet_received_;
   Logger& logger_;
 };
-}  // namespace udp
-}  // namespace ese
+}  // namespace ese::udp::server

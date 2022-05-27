@@ -1,16 +1,14 @@
 #include "test/helpers/scenarios/echo.h"
 
-#include "client/client_factory.h"
+#include "client/udp/client.h"
 #include "common/connection_settings.h"
 #include "common/logger.h"
 #include "common/packet.h"
 #include "common/utils.h"
 #include "gtest/gtest.h"
-#include "server/server_factory.h"
+#include "server/udp/server.h"
 
-namespace ese {
-namespace test {
-namespace scenario {
+namespace ese::test::scenario {
 
 void Echo(const SettingsProvider& settings_provider,
           const std::size_t packet_count) {
@@ -31,29 +29,29 @@ void Echo(const SettingsProvider& settings_provider,
   auto client_logger = Logger(std::clog);
   auto server_logger = Logger(std::clog);
 
-  auto server =
-      CreateServer(server_context, connection_settings, server_logger);
-  auto client =
-      CreateClient(client_context, connection_settings, client_logger);
-
-  auto server_on_packet = [](const Packet& packet) {
-    return Packet(PacketType::Message, packet.Body());
+  auto server_on_packet = [](Packet packet, udp::server::Server& server) {
+    server.SendPacket(packet);
   };
 
-  ClientCallback client_on_packet = [&](const Packet& packet) {
+  auto client_on_packet = [&packets](Packet packet,
+                                     udp::client::Client& client) {
     EXPECT_EQ(packet.Body(), packets.back().Body());
     packets.pop_back();
     if (!packets.empty()) {
-      client->SendPacket(packets.back(), client_on_packet);
+      client.SendPacket(packets.back());
     }
   };
 
-  auto client_on_connected = [&]() {
-    client->SendPacket(packets.back(), client_on_packet);
-  };
+  auto server = udp::server::Server(server_context, connection_settings.host,
+                                    connection_settings.port, server_on_packet,
+                                    server_logger);
+  auto client = udp::client::Client(client_context, connection_settings.host,
+                                    connection_settings.port, client_on_packet,
+                                    client_logger);
 
-  server->Start(server_on_packet);
-  client->Start(client_on_connected);
+  server.Start();
+  client.Start();
+  client.SendPacket(packets.back());
 
   auto server_thread = std::thread([&] { server_context.run(); });
 
@@ -64,6 +62,4 @@ void Echo(const SettingsProvider& settings_provider,
 
   EXPECT_TRUE(packets.empty());
 }
-}  // namespace scenario
-}  // namespace test
-}  // namespace ese
+}  // namespace ese::test::scenario

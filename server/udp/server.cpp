@@ -4,19 +4,25 @@
 #include "common/packet.h"
 #include "common/utils.h"
 
-namespace ese {
-namespace udp {
+namespace ese::udp::server {
 
-Server::Server(Context& context, const Ip& host, Port port, Logger& logger)
-    : socket_(context, Endpoint(host, port)), logger_(logger) {
+Server::Server(Context& context, const Ip& host, Port port,
+               OnPacketReceived on_packet_received, Logger& logger)
+    : socket_(context, Endpoint(host, port)),
+      on_packet_received_(std::move(on_packet_received)),
+      logger_(logger) {
   socket_.set_option(Socket::receive_buffer_size(buffer_.size()));
   socket_.set_option(Socket::send_buffer_size(buffer_.size()));
 }
 
-void Server::Start(ServerCallback on_packet_received) {
-  on_packet_received_ = std::move(on_packet_received);
+void Server::Start() {
   logger_.LogLine("waiting for message...");
   Read();
+}
+
+void Server::SendPacket(const Packet& packet) {
+  auto packet_size = utils::WritePacket(buffer_, packet);
+  Write(packet_size);
 }
 
 void Server::Read() {
@@ -36,11 +42,8 @@ void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
     return;
   }
 
-  auto request = utils::ReadPacket(buffer_, bytes_read);
-  Packet response = on_packet_received_(request);
-  auto response_packet_size = utils::WritePacket(buffer_, response);
-
-  Write(response_packet_size);
+  auto packet = utils::ReadPacket(buffer_, bytes_read);
+  on_packet_received_(std::move(packet), *this);
 }
 
 void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
@@ -51,5 +54,4 @@ void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
 
   Read();
 }
-}  // namespace udp
-}  // namespace ese
+}  // namespace ese::udp::server

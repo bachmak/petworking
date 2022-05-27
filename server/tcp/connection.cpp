@@ -4,15 +4,15 @@
 #include "common/packet.h"
 #include "common/utils.h"
 
-namespace ese {
-namespace tcp {
+namespace ese::tcp::server {
 
-Connection::Connection(Socket socket, Logger& logger,
-                       ServerCallbackPtr on_packet_received)
+Connection::Connection(Socket socket,
+                       const OnPacketReceived& on_packet_received,
+                       Logger& logger)
     : socket_(std::move(socket)),
-      on_packet_received_(std::move(on_packet_received)),
+      on_packet_received_(on_packet_received),
       logger_(logger),
-      request_packet_body_size_(0u) {
+      packet_body_size_(0u) {
   logger_.LogLine("new connection:", socket_);
 }
 
@@ -21,21 +21,23 @@ Connection::~Connection() { /*logger_.LogLine("closed", socket_);*/
 
 void Connection::Start() { Read(sizeof(std::size_t)); }
 
+void Connection::SendPacket(const Packet& packet) {
+  auto packet_size = utils::WritePacketWithSize(buffer_, packet);
+  Write(packet_size);
+}
+
 void Connection::OnRead(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
   }
 
-  if (std::exchange(request_packet_body_size_, 0u) == 0u) {
-    request_packet_body_size_ = utils::ReadSize(buffer_);
-    Read(request_packet_body_size_);
+  if (std::exchange(packet_body_size_, 0u) == 0u) {
+    packet_body_size_ = utils::ReadSize(buffer_);
+    Read(packet_body_size_);
   } else {
-    auto request = utils::ReadPacket(buffer_);
-    Packet response = on_packet_received_->operator()(request);
-
-    auto response_packet_size = utils::WritePacketWithSize(buffer_, response);
-    Write(response_packet_size);
+    auto packet = utils::ReadPacket(buffer_);
+    on_packet_received_(std::move(packet), *this);
   }
 }
 
@@ -63,5 +65,4 @@ void Connection::Write(std::size_t bytes) {
         connection->OnWrite(ec);
       });
 }
-}  // namespace tcp
-}  // namespace ese
+}  // namespace ese::tcp::server
