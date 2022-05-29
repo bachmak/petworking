@@ -6,29 +6,32 @@
 
 namespace ese::tcp::client {
 
-Client::Client(Context& context, const Ip& host, Port host_port,
-               OnConnected on_connected, OnPacketReceived on_packet_received,
+Client::Client(const Ip& host, Port host_port, OnConnected on_connected,
+               OnPacketSent on_packet_sent, OnPacketReceived on_packet_received,
                Logger& logger)
-    : socket_(context),
+    : socket_(context_),
       endpoint_(host, host_port),
       on_connected_(std::move(on_connected)),
+      on_packet_sent_(std::move(on_packet_sent)),
       on_packet_received_(std::move(on_packet_received)),
       logger_(logger),
       packet_body_size_(0u) {}
 
-void Client::Start() {
+void Client::Connect() {
   auto endpoints = std::vector({endpoint_});
   boost::asio::async_connect(
       socket_, endpoints,
-      [this](ErrorCode ec, const Endpoint& ep) { OnConnectedImpl(ec, ep); });
+      [this](ErrorCode ec, const Endpoint&) { OnConnectedImpl(ec); });
 }
 
-void Client::SendPacket(const Packet& packet) {
+void Client::Send(const Packet& packet) {
   auto packet_size = utils::WritePacketWithSize(buffer_, packet);
   Write(packet_size);
 }
 
-void Client::OnConnectedImpl(ErrorCode ec, const Endpoint& endpoint) {
+void Client::Receive() { Read(sizeof(std::size_t)); }
+
+void Client::OnConnectedImpl(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
     return;
@@ -43,7 +46,7 @@ void Client::OnWrite(ErrorCode ec) {
     return;
   }
 
-  Read(sizeof(std::size_t));
+  on_packet_sent_(*this);
 }
 
 void Client::OnRead(ErrorCode ec) {

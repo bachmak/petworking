@@ -1,18 +1,18 @@
 #pragma once
 
-#include "forwards.h"
+#include "common/operation_poller.h"
 
 namespace ese::udp::client {
 
-class Client {
+class Client : public OperationPoller {
  public:
-  explicit Client(Context& context, const Ip& host, Port host_port,
+  explicit Client(const Ip& host, Port host_port, OnPacketSent on_packet_sent,
                   OnPacketReceived on_packet_received, Logger& logger);
 
  public:
-  void Start();
+  void Send(const Packet& packet);
 
-  void SendPacket(const Packet& packet);
+  void Receive();
 
  private:
   void OnWrite(ErrorCode ec);
@@ -27,6 +27,7 @@ class Client {
   Socket socket_;
   Endpoint endpoint_;
   StaticBuf buffer_;
+  const OnPacketSent on_packet_sent_;
   const OnPacketReceived on_packet_received_;
   Logger& logger_;
 };

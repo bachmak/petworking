@@ -6,10 +6,11 @@
 
 namespace ese::udp::client {
 
-Client::Client(Context& context, const Ip& host, Port host_port,
+Client::Client(const Ip& host, Port host_port, OnPacketSent on_packet_sent,
                OnPacketReceived on_packet_received, Logger& logger)
-    : socket_(context),
+    : socket_(context_),
       endpoint_(host, host_port),
+      on_packet_sent_(std::move(on_packet_sent)),
       on_packet_received_(std::move(on_packet_received)),
       logger_(logger) {
   socket_.open(boost::asio::ip::udp::v4());
@@ -17,12 +18,12 @@ Client::Client(Context& context, const Ip& host, Port host_port,
   socket_.set_option(Socket::send_buffer_size(buffer_.size()));
 }
 
-void Client::Start() {}
-
-void Client::SendPacket(const Packet& packet) {
+void Client::Send(const Packet& packet) {
   auto packet_size = utils::WritePacket(buffer_, packet);
   Write(packet_size);
 }
+
+void Client::Receive() { Read(); }
 
 void Client::OnWrite(ErrorCode ec) {
   if (ec) {
@@ -30,7 +31,7 @@ void Client::OnWrite(ErrorCode ec) {
     return;
   }
 
-  Read();
+  on_packet_sent_(*this);
 }
 
 void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {

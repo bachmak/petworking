@@ -41,6 +41,7 @@ namespace client {
 class Client;
 
 using OnConnected = std::function<void(Client&)>;
+using OnPacketSent = std::function<void(Client&)>;
 using OnPacketReceived = std::function<void(Packet, Client&)>;
 }  // namespace client
 }  // namespace tcp
@@ -61,6 +62,7 @@ namespace client {
 
 class Client;
 
+using OnPacketSent = std::function<void(Client&)>;
 using OnPacketReceived = std::function<void(Packet, Client&)>;
 }  // namespace client
 }  // namespace udp

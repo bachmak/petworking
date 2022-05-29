@@ -1,24 +1,24 @@
 #pragma once
 
-#include "forwards.h"
+#include "common/operation_poller.h"
 
 namespace ese::tcp::client {
 
-enum class PacketPart { Size, Body };
-
-class Client {
+class Client : public OperationPoller {
  public:
-  explicit Client(Context& context, const Ip& host, Port host_port,
-                  OnConnected on_connected, OnPacketReceived on_packet_received,
-                  Logger& logger);
+  explicit Client(const Ip& host, Port host_port, OnConnected on_connected,
+                  OnPacketSent on_packet_sent,
+                  OnPacketReceived on_packet_received, Logger& logger);
 
  public:
-  void Start();
+  void Connect();
 
-  void SendPacket(const Packet& packet);
+  void Send(const Packet& packet);
+
+  void Receive();
 
  private:
-  void OnConnectedImpl(ErrorCode ec, const Endpoint& endpoint);
+  void OnConnectedImpl(ErrorCode ec);
 
   void OnWrite(ErrorCode ec);
 
@@ -33,6 +33,7 @@ class Client {
   Endpoint endpoint_;
   StreamBuf buffer_;
   const OnConnected on_connected_;
+  const OnPacketSent on_packet_sent_;
   const OnPacketReceived on_packet_received_;
   Logger& logger_;
   std::size_t packet_body_size_;
