@@ -6,31 +6,30 @@
 
 namespace ese::tcp::server {
 
-Server::Server(Context& context, const Ip& host, Port port,
-               OnConnected on_connected, OnPacketReceived on_packet_received,
+Server::Server(const Ip& host, Port port, OnAccepted on_connected,
+               OnPacketSent on_packet_sent, OnPacketReceived on_packet_received,
                Logger& logger)
-    : acceptor_(context, Endpoint(host, port)),
-      on_connected_(std::move(on_connected)),
+    : acceptor_(context_, Endpoint(host, port)),
+      on_accepted_(std::move(on_connected)),
+      on_packet_sent_(std::move(on_packet_sent)),
       on_packet_received_(std::move(on_packet_received)),
       logger_(logger) {}
 
-void Server::Start() {
-  logger_.LogLine("waiting for connections...");
-
-  acceptor_.async_accept(
-      [this](ErrorCode ec, Socket sock) { OnAccepted(ec, std::move(sock)); });
+void Server::Accept() {
+  acceptor_.async_accept([this](ErrorCode ec, Socket sock) {
+    OnAcceptedImpl(ec, std::move(sock));
+  });
 }
 
-void Server::OnAccepted(ErrorCode ec, Socket socket) {
+void Server::OnAcceptedImpl(ErrorCode ec, Socket socket) {
   if (ec) {
     ESE_LOG_EC(logger_, ec);
     return;
   }
 
-  acceptor_.async_accept([this](auto&&... args) { OnAccepted(ESE_FWD(args)); });
+  auto connection = std::make_shared<Connection>(
+      std::move(socket), on_packet_sent_, on_packet_received_, logger_);
 
-  auto connection = std::make_shared<Connection>(std::move(socket),
-                                                 on_packet_received_, logger_);
-  on_connected_(*connection);
+  on_accepted_(*this, *connection);
 }
 }  // namespace ese::tcp::server

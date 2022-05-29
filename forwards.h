@@ -30,9 +30,11 @@ using Endpoint = boost::asio::ip::tcp::endpoint;
 
 namespace server {
 
+class Server;
 class Connection;
 
-using OnConnected = std::function<void(Connection&)>;
+using OnAccepted = std::function<void(Server&, Connection&)>;
+using OnPacketSent = std::function<void(Connection&)>;
 using OnPacketReceived = std::function<void(Packet, Connection&)>;
 }  // namespace server
 
@@ -55,6 +57,7 @@ namespace server {
 
 class Server;
 
+using OnPacketSent = std::function<void(Server&)>;
 using OnPacketReceived = std::function<void(Packet, Server&)>;
 }  // namespace server
 

@@ -25,6 +25,18 @@ void Client::Send(const Packet& packet) {
 
 void Client::Receive() { Read(); }
 
+void Client::Write(std::size_t bytes) {
+  auto buffer = boost::asio::buffer(buffer_.data(), bytes);
+  socket_.async_send_to(buffer, endpoint_,
+                        [this](ErrorCode ec, std::size_t) { OnWrite(ec); });
+}
+
+void Client::Read() {
+  auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
+  socket_.async_receive_from(buffer, endpoint_,
+                             [this](auto... args) { OnRead(ESE_FWD(args)); });
+}
+
 void Client::OnWrite(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
@@ -42,17 +54,5 @@ void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
 
   auto packet = utils::ReadPacket(buffer_, bytes_read);
   on_packet_received_(std::move(packet), *this);
-}
-
-void Client::Write(std::size_t bytes) {
-  auto buffer = boost::asio::buffer(buffer_.data(), bytes);
-  socket_.async_send_to(buffer, endpoint_,
-                        [this](ErrorCode ec, std::size_t) { OnWrite(ec); });
-}
-
-void Client::Read() {
-  auto buffer = boost::asio::buffer(buffer_.data(), buffer_.size());
-  socket_.async_receive_from(buffer, endpoint_,
-                             [this](auto... args) { OnRead(ESE_FWD(args)); });
 }
 }  // namespace ese::udp::client

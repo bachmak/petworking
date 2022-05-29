@@ -15,8 +15,6 @@ namespace ese::test::scenario {
 
 void EchoUdp(const SettingsProvider& settings_provider,
              const std::size_t packet_count) {
-  auto server_context = Context();
-
   auto connection_settings = ConnectionSettings(settings_provider);
 
   auto packets = std::vector<Packet>();
@@ -31,9 +29,13 @@ void EchoUdp(const SettingsProvider& settings_provider,
   auto server_logger = Logger(std::clog);
   auto client_logger = Logger(std::clog);
 
-  auto server_on_packet = [](const Packet& packet,
-                             udp::server::Server& server) {
-    server.SendPacket(packet);
+  auto server_on_packet_sent = [](udp::server::Server& server) {
+    server.Receive();
+  };
+
+  auto server_on_packet_received = [](const Packet& packet,
+                                      udp::server::Server& server) {
+    server.Send(packet);
   };
 
   auto client_on_packet_sent = [](udp::client::Client& client) {
@@ -49,23 +51,23 @@ void EchoUdp(const SettingsProvider& settings_provider,
     }
   };
 
-  auto server = udp::server::Server(server_context, connection_settings.host,
-                                    connection_settings.port, server_on_packet,
-                                    server_logger);
+  auto server = udp::server::Server(
+      connection_settings.host, connection_settings.port, server_on_packet_sent,
+      server_on_packet_received, server_logger);
 
   auto client = udp::client::Client(
       connection_settings.host, connection_settings.port, client_on_packet_sent,
       client_on_packet_received, client_logger);
 
-  server.Start();
+  server.Receive();
 
   client.Send(packets.back());
 
-  auto server_thread = std::thread([&] { server_context.run(); });
+  auto server_thread = std::thread([&] { server.StartPolling(); });
 
   client.StartPolling();
 
-  server_context.stop();
+  server.StopPolling();
   server_thread.join();
 
   EXPECT_TRUE(packets.empty());
@@ -73,8 +75,6 @@ void EchoUdp(const SettingsProvider& settings_provider,
 
 void EchoTcp(const SettingsProvider& settings_provider,
              const std::size_t packet_count) {
-  auto server_context = Context();
-
   auto connection_settings = ConnectionSettings(settings_provider);
 
   auto packets = std::vector<Packet>();
@@ -89,13 +89,19 @@ void EchoTcp(const SettingsProvider& settings_provider,
   auto server_logger = Logger(std::clog);
   auto client_logger = Logger(std::clog);
 
-  auto server_on_connected = [](tcp::server::Connection& connection) {
-    connection.Start();
+  auto server_on_accepted = [](tcp::server::Server& server,
+                               tcp::server::Connection& connection) {
+    server.Accept();
+    connection.Receive();
+  };
+
+  auto server_on_sent = [](tcp::server::Connection& connection) {
+    connection.Receive();
   };
 
   auto server_on_received = [](const Packet& packet,
                                tcp::server::Connection& connection) {
-    connection.SendPacket(packet);
+    connection.Send(packet);
   };
 
   auto client_on_connected = [&packets](tcp::client::Client& client) {
@@ -114,21 +120,21 @@ void EchoTcp(const SettingsProvider& settings_provider,
   };
 
   auto server = tcp::server::Server(
-      server_context, connection_settings.host, connection_settings.port,
-      server_on_connected, server_on_received, server_logger);
+      connection_settings.host, connection_settings.port, server_on_accepted,
+      server_on_sent, server_on_received, server_logger);
   auto client = tcp::client::Client(
       connection_settings.host, connection_settings.port, client_on_connected,
       client_on_sent, client_on_received, client_logger);
 
-  server.Start();
+  server.Accept();
 
   client.Connect();
 
-  auto server_thread = std::thread([&] { server_context.run(); });
+  auto server_thread = std::thread([&] { server.StartPolling(); });
 
   client.StartPolling();
 
-  server_context.stop();
+  server.StopPolling();
   server_thread.join();
 
   EXPECT_TRUE(packets.empty());

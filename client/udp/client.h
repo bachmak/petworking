@@ -15,13 +15,13 @@ class Client : public OperationPoller {
   void Receive();
 
  private:
-  void OnWrite(ErrorCode ec);
-
-  void OnRead(ErrorCode ec, std::size_t bytes_read);
-
   void Write(std::size_t bytes);
 
   void Read();
+
+  void OnWrite(ErrorCode ec);
+
+  void OnRead(ErrorCode ec, std::size_t bytes_read);
 
  private:
   Socket socket_;

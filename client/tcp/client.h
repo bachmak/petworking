@@ -18,15 +18,15 @@ class Client : public OperationPoller {
   void Receive();
 
  private:
+  void Write(std::size_t bytes);
+
+  void Read(std::size_t bytes);
+
   void OnConnectedImpl(ErrorCode ec);
 
   void OnWrite(ErrorCode ec);
 
   void OnRead(ErrorCode ec);
-
-  void Write(std::size_t bytes);
-
-  void Read(std::size_t bytes);
 
  private:
   Socket socket_;

@@ -31,6 +31,18 @@ void Client::Send(const Packet& packet) {
 
 void Client::Receive() { Read(sizeof(std::size_t)); }
 
+void Client::Write(std::size_t bytes) {
+  boost::asio::async_write(socket_, buffer_,
+                           boost::asio::transfer_exactly(bytes),
+                           [this](ErrorCode ec, std::size_t) { OnWrite(ec); });
+}
+
+void Client::Read(std::size_t bytes) {
+  boost::asio::async_read(socket_, buffer_,
+                          boost::asio::transfer_exactly(bytes),
+                          [this](ErrorCode ec, std::size_t) { OnRead(ec); });
+}
+
 void Client::OnConnectedImpl(ErrorCode ec) {
   if (ec) {
     ESE_LOG_EC(logger_, ec)
@@ -62,17 +74,5 @@ void Client::OnRead(ErrorCode ec) {
     auto packet = utils::ReadPacket(buffer_);
     on_packet_received_(std::move(packet), *this);
   }
-}
-
-void Client::Write(std::size_t bytes) {
-  boost::asio::async_write(socket_, buffer_,
-                           boost::asio::transfer_exactly(bytes),
-                           [this](ErrorCode ec, std::size_t) { OnWrite(ec); });
-}
-
-void Client::Read(std::size_t bytes) {
-  boost::asio::async_read(socket_, buffer_,
-                          boost::asio::transfer_exactly(bytes),
-                          [this](ErrorCode ec, std::size_t) { OnRead(ec); });
 }
 }  // namespace ese::tcp::client

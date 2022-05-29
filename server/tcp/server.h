@@ -1,24 +1,25 @@
 #pragma once
 
-#include "forwards.h"
+#include "common/operation_poller.h"
 
 namespace ese::tcp::server {
 
-class Server {
+class Server : public OperationPoller {
  public:
-  explicit Server(Context& context, const Ip& host, Port port,
-                  OnConnected on_connected, OnPacketReceived on_packet_received,
-                  Logger& logger);
+  explicit Server(const Ip& host, Port port, OnAccepted on_connected,
+                  OnPacketSent on_packet_sent,
+                  OnPacketReceived on_packet_received, Logger& logger);
 
  public:
-  void Start();
+  void Accept();
 
  private:
-  void OnAccepted(ErrorCode ec, Socket socket);
+  void OnAcceptedImpl(ErrorCode ec, Socket socket);
 
  private:
   Acceptor acceptor_;
-  const OnConnected on_connected_;
+  const OnAccepted on_accepted_;
+  const OnPacketSent on_packet_sent_;
   const OnPacketReceived on_packet_received_;
   Logger& logger_;
 };

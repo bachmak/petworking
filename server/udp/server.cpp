@@ -6,23 +6,29 @@
 
 namespace ese::udp::server {
 
-Server::Server(Context& context, const Ip& host, Port port,
+Server::Server(const Ip& host, Port port, OnPacketSent on_packet_sent,
                OnPacketReceived on_packet_received, Logger& logger)
-    : socket_(context, Endpoint(host, port)),
+    : socket_(context_, Endpoint(host, port)),
+      on_packet_sent_(on_packet_sent),
       on_packet_received_(std::move(on_packet_received)),
       logger_(logger) {
   socket_.set_option(Socket::receive_buffer_size(buffer_.size()));
   socket_.set_option(Socket::send_buffer_size(buffer_.size()));
 }
 
-void Server::Start() {
-  logger_.LogLine("waiting for message...");
+void Server::Send(const Packet& packet) {
+  auto packet_size = utils::WritePacket(buffer_, packet);
+  Write(packet_size);
+}
+
+void Server::Receive() {
   Read();
 }
 
-void Server::SendPacket(const Packet& packet) {
-  auto packet_size = utils::WritePacket(buffer_, packet);
-  Write(packet_size);
+void Server::Write(std::size_t bytes_to_write) {
+  socket_.async_send_to(boost::asio::buffer(buffer_.data(), bytes_to_write),
+                        remote_endpoint_,
+                        [this](auto&&... args) { OnWrite(ESE_FWD(args)); });
 }
 
 void Server::Read() {
@@ -30,10 +36,13 @@ void Server::Read() {
                              [this](auto&&... args) { OnRead(ESE_FWD(args)); });
 }
 
-void Server::Write(std::size_t bytes_to_write) {
-  socket_.async_send_to(boost::asio::buffer(buffer_.data(), bytes_to_write),
-                        remote_endpoint_,
-                        [this](auto&&... args) { OnWrite(ESE_FWD(args)); });
+void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
+  if (ec) {
+    ESE_LOG_EC(logger_, ec)
+    return;
+  }
+
+  on_packet_sent_(*this);
 }
 
 void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
@@ -44,14 +53,5 @@ void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
 
   auto packet = utils::ReadPacket(buffer_, bytes_read);
   on_packet_received_(std::move(packet), *this);
-}
-
-void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
-  if (ec) {
-    ESE_LOG_EC(logger_, ec)
-    return;
-  }
-
-  Read();
 }
 }  // namespace ese::udp::server
