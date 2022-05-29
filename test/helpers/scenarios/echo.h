@@ -20,7 +20,10 @@ struct SettingsProvider {
 
 namespace scenario {
 
-void Echo(const SettingsProvider& settings_provider,
-          const std::size_t packet_count);
-}
+void EchoUdp(const SettingsProvider& settings_provider,
+             const std::size_t packet_count);
+
+void EchoTcp(const SettingsProvider& settings_provider,
+             const std::size_t packet_count);
+}  // namespace scenario
 }  // namespace ese::test
