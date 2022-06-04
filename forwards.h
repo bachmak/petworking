@@ -32,10 +32,7 @@ namespace server {
 
 class Server;
 class Connection;
-
-using OnAccepted = std::function<void(Server&, Connection&)>;
-using OnPacketSent = std::function<void(Connection&)>;
-using OnPacketReceived = std::function<void(Packet, Connection&)>;
+class Callback;
 }  // namespace server
 
 namespace client {
@@ -56,9 +53,7 @@ using Endpoint = boost::asio::ip::udp::endpoint;
 namespace server {
 
 class Server;
-
-using OnPacketSent = std::function<void(Server&)>;
-using OnPacketReceived = std::function<void(Packet, Server&)>;
+class Callback;
 }  // namespace server
 
 namespace client {

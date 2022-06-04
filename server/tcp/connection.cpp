@@ -3,15 +3,13 @@
 #include "common/logger.h"
 #include "common/packet.h"
 #include "common/utils.h"
+#include "server/tcp/callback.h"
 
 namespace ese::tcp::server {
 
-Connection::Connection(Socket socket, const OnPacketSent& on_packet_sent,
-                       const OnPacketReceived& on_packet_received,
-                       Logger& logger)
+Connection::Connection(Socket socket, Callback& callback, Logger& logger)
     : socket_(std::move(socket)),
-      on_packet_sent_(on_packet_sent),
-      on_packet_received_(on_packet_received),
+      callback_(callback),
       logger_(logger),
       packet_body_size_(0u) {}
 
@@ -44,7 +42,7 @@ void Connection::OnWrite(ErrorCode ec) {
     return;
   }
 
-  on_packet_sent_(*this);
+  callback_.OnPacketSent(*this);
 }
 
 void Connection::OnRead(ErrorCode ec) {
@@ -58,7 +56,7 @@ void Connection::OnRead(ErrorCode ec) {
     Read(packet_body_size_);
   } else {
     auto packet = utils::ReadPacket(buffer_);
-    on_packet_received_(std::move(packet), *this);
+    callback_.OnPacketReceived(std::move(packet), *this);
   }
 }
 }  // namespace ese::tcp::server

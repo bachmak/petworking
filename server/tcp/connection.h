@@ -6,9 +6,7 @@ namespace ese::tcp::server {
 
 class Connection : public std::enable_shared_from_this<Connection> {
  public:
-  explicit Connection(Socket socket, const OnPacketSent& on_packet_sent,
-                      const OnPacketReceived& on_packet_received,
-                      Logger& logger);
+  explicit Connection(Socket socket, Callback& callback, Logger& logger);
 
  public:
   void Send(const Packet& packet);
@@ -27,8 +25,7 @@ class Connection : public std::enable_shared_from_this<Connection> {
  private:
   Socket socket_;
   StreamBuf buffer_;
-  const OnPacketSent& on_packet_sent_;
-  const OnPacketReceived& on_packet_received_;
+  Callback& callback_;
   Logger& logger_;
   std::size_t packet_body_size_;
 };

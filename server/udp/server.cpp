@@ -3,27 +3,27 @@
 #include "common/logger.h"
 #include "common/packet.h"
 #include "common/utils.h"
+#include "server/udp/callback.h"
 
 namespace ese::udp::server {
 
-Server::Server(const Ip& host, Port port, OnPacketSent on_packet_sent,
-               OnPacketReceived on_packet_received, Logger& logger)
+Server::Server(const Ip& host, Port port, std::unique_ptr<Callback> callback,
+               Logger& logger)
     : socket_(context_, Endpoint(host, port)),
-      on_packet_sent_(on_packet_sent),
-      on_packet_received_(std::move(on_packet_received)),
+      callback_(std::move(callback)),
       logger_(logger) {
   socket_.set_option(Socket::receive_buffer_size(buffer_.size()));
   socket_.set_option(Socket::send_buffer_size(buffer_.size()));
 }
+
+Server::~Server() = default;
 
 void Server::Send(const Packet& packet) {
   auto packet_size = utils::WritePacket(buffer_, packet);
   Write(packet_size);
 }
 
-void Server::Receive() {
-  Read();
-}
+void Server::Receive() { Read(); }
 
 void Server::Write(std::size_t bytes_to_write) {
   socket_.async_send_to(boost::asio::buffer(buffer_.data(), bytes_to_write),
@@ -42,7 +42,7 @@ void Server::OnWrite(ErrorCode ec, std::size_t bytes_write) {
     return;
   }
 
-  on_packet_sent_(*this);
+  callback_->OnPacketSent(*this);
 }
 
 void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
@@ -52,6 +52,6 @@ void Server::OnRead(ErrorCode ec, std::size_t bytes_read) {
   }
 
   auto packet = utils::ReadPacket(buffer_, bytes_read);
-  on_packet_received_(std::move(packet), *this);
+  callback_->OnPacketReceived(std::move(packet), *this);
 }
 }  // namespace ese::udp::server

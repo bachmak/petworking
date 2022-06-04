@@ -6,9 +6,10 @@ namespace ese::tcp::server {
 
 class Server : public OperationPoller {
  public:
-  explicit Server(const Ip& host, Port port, OnAccepted on_connected,
-                  OnPacketSent on_packet_sent,
-                  OnPacketReceived on_packet_received, Logger& logger);
+  explicit Server(const Ip& host, Port port, std::unique_ptr<Callback> callback,
+                  Logger& logger);
+
+  ~Server();
 
  public:
   void Accept();
@@ -18,9 +19,7 @@ class Server : public OperationPoller {
 
  private:
   Acceptor acceptor_;
-  const OnAccepted on_accepted_;
-  const OnPacketSent on_packet_sent_;
-  const OnPacketReceived on_packet_received_;
+  const std::unique_ptr<Callback> callback_;
   Logger& logger_;
 };
 }  // namespace ese::tcp::server

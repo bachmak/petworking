@@ -10,6 +10,8 @@
 #include "server/tcp/connection.h"
 #include "server/tcp/server.h"
 #include "server/udp/server.h"
+#include "test/helpers/scenarios/tcp_server_callback.h"
+#include "test/helpers/scenarios/udp_server_callback.h"
 
 namespace ese::test::scenario {
 
@@ -29,15 +31,6 @@ void EchoUdp(const SettingsProvider& settings_provider,
   auto server_logger = Logger(std::clog);
   auto client_logger = Logger(std::clog);
 
-  auto server_on_packet_sent = [](udp::server::Server& server) {
-    server.Receive();
-  };
-
-  auto server_on_packet_received = [](const Packet& packet,
-                                      udp::server::Server& server) {
-    server.Send(packet);
-  };
-
   auto client_on_packet_sent = [](udp::client::Client& client) {
     client.Receive();
   };
@@ -51,9 +44,9 @@ void EchoUdp(const SettingsProvider& settings_provider,
     }
   };
 
-  auto server = udp::server::Server(
-      connection_settings.host, connection_settings.port, server_on_packet_sent,
-      server_on_packet_received, server_logger);
+  auto server =
+      udp::server::Server(connection_settings.host, connection_settings.port,
+                          std::make_unique<UdpServerCallback>(), server_logger);
 
   auto client = udp::client::Client(
       connection_settings.host, connection_settings.port, client_on_packet_sent,
@@ -89,21 +82,6 @@ void EchoTcp(const SettingsProvider& settings_provider,
   auto server_logger = Logger(std::clog);
   auto client_logger = Logger(std::clog);
 
-  auto server_on_accepted = [](tcp::server::Server& server,
-                               tcp::server::Connection& connection) {
-    server.Accept();
-    connection.Receive();
-  };
-
-  auto server_on_sent = [](tcp::server::Connection& connection) {
-    connection.Receive();
-  };
-
-  auto server_on_received = [](const Packet& packet,
-                               tcp::server::Connection& connection) {
-    connection.Send(packet);
-  };
-
   auto client_on_connected = [&packets](tcp::client::Client& client) {
     client.Send(packets.back());
   };
@@ -119,9 +97,10 @@ void EchoTcp(const SettingsProvider& settings_provider,
     }
   };
 
-  auto server = tcp::server::Server(
-      connection_settings.host, connection_settings.port, server_on_accepted,
-      server_on_sent, server_on_received, server_logger);
+  auto server =
+      tcp::server::Server(connection_settings.host, connection_settings.port,
+                          std::make_unique<TcpServerCallback>(), server_logger);
+
   auto client = tcp::client::Client(
       connection_settings.host, connection_settings.port, client_on_connected,
       client_on_sent, client_on_received, client_logger);
