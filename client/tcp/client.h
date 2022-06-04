@@ -6,9 +6,8 @@ namespace ese::tcp::client {
 
 class Client : public OperationPoller {
  public:
-  explicit Client(const Ip& host, Port host_port, OnConnected on_connected,
-                  OnPacketSent on_packet_sent,
-                  OnPacketReceived on_packet_received, Logger& logger);
+  explicit Client(const Ip& host, Port host_port,
+                  std::unique_ptr<Callback> callback, Logger& logger);
 
  public:
   void Connect();
@@ -32,9 +31,7 @@ class Client : public OperationPoller {
   Socket socket_;
   Endpoint endpoint_;
   StreamBuf buffer_;
-  const OnConnected on_connected_;
-  const OnPacketSent on_packet_sent_;
-  const OnPacketReceived on_packet_received_;
+  const std::unique_ptr<Callback> callback_;
   Logger& logger_;
   std::size_t packet_body_size_;
 };

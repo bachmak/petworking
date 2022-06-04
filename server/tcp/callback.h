@@ -1,5 +1,7 @@
 #pragma once
 
+#include "forwards.h"
+
 namespace ese::tcp::server {
 
 class Callback {

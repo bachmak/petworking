@@ -1,17 +1,17 @@
 #include "client/udp/client.h"
 
+#include "client/udp/callback.h"
 #include "common/logger.h"
 #include "common/packet.h"
 #include "common/utils.h"
 
 namespace ese::udp::client {
 
-Client::Client(const Ip& host, Port host_port, OnPacketSent on_packet_sent,
-               OnPacketReceived on_packet_received, Logger& logger)
+Client::Client(const Ip& host, Port host_port,
+               std::unique_ptr<Callback> callback, Logger& logger)
     : socket_(context_),
       endpoint_(host, host_port),
-      on_packet_sent_(std::move(on_packet_sent)),
-      on_packet_received_(std::move(on_packet_received)),
+      callback_(std::move(callback)),
       logger_(logger) {
   socket_.open(boost::asio::ip::udp::v4());
   socket_.set_option(Socket::receive_buffer_size(buffer_.size()));
@@ -43,7 +43,7 @@ void Client::OnWrite(ErrorCode ec) {
     return;
   }
 
-  on_packet_sent_(*this);
+  callback_->OnPacketSent(*this);
 }
 
 void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
@@ -53,6 +53,6 @@ void Client::OnRead(ErrorCode ec, std::size_t bytes_read) {
   }
 
   auto packet = utils::ReadPacket(buffer_, bytes_read);
-  on_packet_received_(std::move(packet), *this);
+  callback_->OnPacketReceived(std::move(packet), *this);
 }
 }  // namespace ese::udp::client

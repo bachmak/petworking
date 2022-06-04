@@ -6,8 +6,8 @@ namespace ese::udp::client {
 
 class Client : public OperationPoller {
  public:
-  explicit Client(const Ip& host, Port host_port, OnPacketSent on_packet_sent,
-                  OnPacketReceived on_packet_received, Logger& logger);
+  explicit Client(const Ip& host, Port host_port,
+                  std::unique_ptr<Callback> callback, Logger& logger);
 
  public:
   void Send(const Packet& packet);
@@ -27,8 +27,7 @@ class Client : public OperationPoller {
   Socket socket_;
   Endpoint endpoint_;
   StaticBuf buffer_;
-  const OnPacketSent on_packet_sent_;
-  const OnPacketReceived on_packet_received_;
+  const std::unique_ptr<Callback> callback_;
   Logger& logger_;
 };
 }  // namespace ese::udp::client

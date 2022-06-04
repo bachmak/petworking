@@ -1,5 +1,7 @@
 #pragma once
 
+#include "forwards.h"
+
 namespace ese::udp::server {
 
 class Callback {

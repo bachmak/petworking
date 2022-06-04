@@ -38,10 +38,7 @@ class Callback;
 namespace client {
 
 class Client;
-
-using OnConnected = std::function<void(Client&)>;
-using OnPacketSent = std::function<void(Client&)>;
-using OnPacketReceived = std::function<void(Packet, Client&)>;
+class Callback;
 }  // namespace client
 }  // namespace tcp
 
@@ -59,9 +56,7 @@ class Callback;
 namespace client {
 
 class Client;
-
-using OnPacketSent = std::function<void(Client&)>;
-using OnPacketReceived = std::function<void(Packet, Client&)>;
+class Callback;
 }  // namespace client
 }  // namespace udp
 }  // namespace ese

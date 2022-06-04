@@ -1,19 +1,17 @@
 #include "client/tcp/client.h"
 
+#include "client/tcp/callback.h"
 #include "common/logger.h"
 #include "common/packet.h"
 #include "common/utils.h"
 
 namespace ese::tcp::client {
 
-Client::Client(const Ip& host, Port host_port, OnConnected on_connected,
-               OnPacketSent on_packet_sent, OnPacketReceived on_packet_received,
-               Logger& logger)
+Client::Client(const Ip& host, Port host_port,
+               std::unique_ptr<Callback> callback, Logger& logger)
     : socket_(context_),
       endpoint_(host, host_port),
-      on_connected_(std::move(on_connected)),
-      on_packet_sent_(std::move(on_packet_sent)),
-      on_packet_received_(std::move(on_packet_received)),
+      callback_(std::move(callback)),
       logger_(logger),
       packet_body_size_(0u) {}
 
@@ -49,7 +47,7 @@ void Client::OnConnectedImpl(ErrorCode ec) {
     return;
   }
 
-  on_connected_(*this);
+  callback_->OnConnected(*this);
 }
 
 void Client::OnWrite(ErrorCode ec) {
@@ -58,7 +56,7 @@ void Client::OnWrite(ErrorCode ec) {
     return;
   }
 
-  on_packet_sent_(*this);
+  callback_->OnPacketSent(*this);
 }
 
 void Client::OnRead(ErrorCode ec) {
@@ -72,7 +70,7 @@ void Client::OnRead(ErrorCode ec) {
     Read(packet_body_size_);
   } else {
     auto packet = utils::ReadPacket(buffer_);
-    on_packet_received_(std::move(packet), *this);
+    callback_->OnPacketReceived(std::move(packet), *this);
   }
 }
 }  // namespace ese::tcp::client
